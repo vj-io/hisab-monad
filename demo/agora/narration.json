@@ -1,0 +1,42 @@
+[
+{
+"id": "cold",
+"text": "One payment, across a border, split three ways. Confirmed in under two seconds."
+},
+{
+"id": "ctx",
+"text": "Exporter in India, buyer overseas. A SWIFT wire pays sixty to ninety days later. On Monad, one A U S D payment settles in seconds."
+},
+{
+"id": "pk",
+"text": "First, passkey onboarding. On the buyer card, tap sign up with passkey and approve with Touch I D. Privy creates an embedded wallet on Monad: no seed phrase, no extension. The card now reads passkey wallet, with its own address, and one tap funds its gas."
+},
+{
+"id": "load",
+"text": "The rest runs on burner wallets. The exporter loads a shipment: forty-eight thousand seven hundred fifty dollars, offer thirty-nine thousand."
+},
+{
+"id": "lender",
+"text": "Now the A U S D balances, all zero. The lender mints a hundred thousand test A U S D, it lands in their wallet, and depositing it grows the pool balance by exactly that."
+},
+{
+"id": "ack",
+"text": "The buyer signs the invoice with an E I P seven-twelve message, which unlocks the advance."
+},
+{
+"id": "accept",
+"text": "Now, send and receive. The exporter accepts, the pool sends thirty-nine thousand A U S D, and it lands in the exporter's wallet. Confirmed in about one point three seconds."
+},
+{
+"id": "pay",
+"text": "Then the buyer sends forty-eight thousand seven hundred fifty across the border. The exporter's balance jumps, and one transaction has split it: just over forty thousand to the pool, a twenty-six dollar fee, and eight thousand seven hundred twenty-two to the exporter."
+},
+{
+"id": "why",
+"text": "Why Monad? Four hundred millisecond blocks, fast finality: settlement in seconds. One dollar asset for everyone, so no F X step onchain. On testnet, A U S D is a six-decimal mock with the same interface."
+},
+{
+"id": "end",
+"text": "Passkey in, A U S D balance, a payment settled in seconds. Hisab on Monad."
+}
+]

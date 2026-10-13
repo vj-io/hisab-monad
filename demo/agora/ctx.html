@@ -1,0 +1,125 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;800&family=JetBrains+Mono:wght@500;700&family=Patrick+Hand&display=block" rel="stylesheet">
+<style>
+:root{--paper:#f0ede8;--card:#f8f6f1;--ink:#0a0a0a;--lime:#c8ff00;--red:#c4291c}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1920px;height:1080px;overflow:hidden;background:var(--paper)}
+svg{position:absolute;left:0;top:0}
+.ink{fill:none;stroke:var(--ink);stroke-linecap:round;stroke-linejoin:round}
+.fillc{fill:var(--card)}
+text{font-family:'Archivo',sans-serif;font-weight:800;fill:var(--ink)}
+.hand{font-family:'Patrick Hand',cursive;font-weight:400}
+.mono{font-family:'JetBrains Mono',monospace;font-weight:700}
+</style></head>
+<body>
+<svg id="s" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <defs>
+    <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse"><path d="M60 0H0V60" fill="none" stroke="rgba(10,10,10,.07)" stroke-width="1.5"/></pattern>
+    <filter id="boil" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="4"/><feDisplacementMap in="SourceGraphic" scale="4" xChannelSelector="R" yChannelSelector="G"/></filter>
+  </defs>
+  <rect width="1920" height="1080" fill="var(--paper)"/><rect width="1920" height="1080" fill="url(#grid)"/>
+  <g filter="url(#boil)">
+    <!-- sea route -->
+    <path id="sea" class="ink" d="M440 742 q40 -22 80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0" stroke-width="5" stroke-dasharray="1" pathLength="1" opacity=".55"/>
+    <!-- exporter: factory -->
+    <g id="ex" transform="translate(150 0)">
+      <path id="ex1" class="ink fillc" stroke-width="7" pathLength="1" stroke-dasharray="1" d="M20 740 L20 590 L110 650 L110 590 L200 650 L200 590 L290 650 L290 740 Z"/>
+      <path id="ex2" class="ink fillc" stroke-width="7" pathLength="1" stroke-dasharray="1" d="M232 600 L232 500 L272 500 L272 640"/>
+      <path id="ex3" class="ink" stroke-width="6" pathLength="1" stroke-dasharray="1" d="M60 690 h36 v36 h-36 z M130 690 h36 v36 h-36 z M200 690 h36 v36 h-36 z"/>
+    </g>
+    <!-- buyer: office tower -->
+    <g id="by" transform="translate(1390 0)">
+      <path id="by1" class="ink fillc" stroke-width="7" pathLength="1" stroke-dasharray="1" d="M30 740 L30 470 L190 470 L190 740 Z"/>
+      <path id="by2" class="ink" stroke-width="6" pathLength="1" stroke-dasharray="1" d="M70 510 h28 v28 h-28 z M122 510 h28 v28 h-28 z M70 570 h28 v28 h-28 z M122 570 h28 v28 h-28 z M70 630 h28 v28 h-28 z M122 630 h28 v28 h-28 z M92 690 h36 v50"/>
+      <path id="by3" class="ink" stroke-width="6" pathLength="1" stroke-dasharray="1" d="M110 470 L110 420 M96 432 L124 432"/>
+    </g>
+    <!-- ship -->
+    <g id="ship">
+      <path class="ink fillc" stroke-width="6" d="M0 0 L150 0 L128 40 L22 40 Z"/>
+      <rect class="ink" x="14" y="-34" width="38" height="34" fill="#c8ff00" stroke-width="5"/>
+      <rect class="ink" x="56" y="-34" width="38" height="34" fill="#f8f6f1" stroke-width="5"/>
+      <rect class="ink" x="98" y="-34" width="38" height="34" fill="#c8ff00" stroke-width="5"/>
+      <rect class="ink" x="35" y="-68" width="38" height="34" fill="#f8f6f1" stroke-width="5"/>
+    </g>
+    <!-- swift lane -->
+    <path id="lane" class="ink" stroke-width="5" pathLength="1" stroke-dasharray="1" d="M1490 905 L420 905" opacity=".6"/>
+    <g id="env"><rect class="ink fillc" x="-48" y="-32" width="96" height="64" rx="6" stroke-width="6"/><path class="ink" stroke-width="6" d="M-48 -26 L0 8 L48 -26"/></g>
+    <!-- coin -->
+    <g id="trail"><circle r="50" fill="#c8ff00" opacity=".25"/><circle r="50" fill="#c8ff00" opacity=".4"/><circle r="50" fill="#c8ff00" opacity=".6"/></g>
+    <g id="coin"><circle r="58" fill="#c8ff00" stroke="#0a0a0a" stroke-width="7"/><text class="mono" text-anchor="middle" y="9" font-size="26" style="font-family:'JetBrains Mono',monospace;font-weight:700">AUSD</text></g>
+    <g id="burst" stroke="#0a0a0a" stroke-width="6" stroke-linecap="round"></g>
+    <!-- clock -->
+    <g id="clock"><circle r="64" class="ink fillc" stroke-width="7"/><path class="ink" stroke-width="6" d="M0 0 V-40" id="hand1"/><path class="ink" stroke-width="7" d="M0 0 H28" id="hand2"/><circle r="6" fill="#0a0a0a"/></g>
+    <rect id="bar0" x="460" y="960" width="980" height="34" rx="8" class="ink fillc" stroke-width="6"/>
+    <rect id="bar1" x="464" y="964" width="0" height="26" rx="5" fill="#c4291c" opacity=".85"/>
+  </g>
+  <!-- texts -->
+  <g id="tEx"><text x="305" y="800" text-anchor="middle" font-size="50" style="letter-spacing:-1.5px">Exporter</text>
+    <rect x="236" y="814" width="140" height="48" rx="8" fill="#c8ff00" stroke="#0a0a0a" stroke-width="5"/><text class="hand" x="306" y="850" text-anchor="middle" font-size="36">India</text></g>
+  <g id="tBy"><text x="1500" y="800" text-anchor="middle" font-size="50" style="letter-spacing:-1.5px">Buyer</text>
+    <rect x="1414" y="814" width="172" height="48" rx="8" fill="#c8ff00" stroke="#0a0a0a" stroke-width="5"/><text class="hand" x="1500" y="850" text-anchor="middle" font-size="36">overseas</text></g>
+  <text id="tShip" class="hand" x="900" y="660" text-anchor="middle" font-size="40">goods ship</text>
+  <text id="tSwift" x="960" y="872" text-anchor="middle" font-size="40" style="letter-spacing:-1px">SWIFT wire</text>
+  <text id="tDay" class="mono" x="1450" y="1030" text-anchor="end" font-size="34" style="font-family:'JetBrains Mono',monospace;font-weight:700">day 0</text>
+  <g id="tBig"><rect id="bigHl" x="400" y="292" width="0" height="84" fill="#c8ff00"/><text x="960" y="380" text-anchor="middle" font-size="156" style="letter-spacing:-6px">60–90 days</text>
+    <path id="bigX" class="ink" stroke-width="12" d="M430 340 L1490 340" stroke="#c4291c" stroke-dasharray="1" pathLength="1" stroke-dashoffset="1"/></g>
+  <g id="tRes"><rect id="resHl" x="560" y="290" width="800" height="120" fill="#c8ff00"/><text id="resNum" class="mono" x="960" y="410" text-anchor="middle" font-size="176" style="font-family:'JetBrains Mono',monospace;font-weight:700;letter-spacing:-8px">0.0 s</text>
+    <text class="hand" id="resSub" x="960" y="490" text-anchor="middle" font-size="56">one AUSD payment on Monad</text></g>
+  <g id="tTitle"><text x="150" y="150" font-size="72" style="letter-spacing:-3px">Today: SWIFT wire</text></g>
+  <g id="tNew"><rect id="newHl" x="140" y="108" width="0" height="56" fill="#c8ff00" opacity="0"/><text x="150" y="150" font-size="72" style="letter-spacing:-3px">Hisab on Monad</text></g>
+</svg>
+<script>
+const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x)), seg=(t,a,b)=>clamp((t-a)/(b-a)), eo=x=>1-Math.pow(1-x,3), eio=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;
+const spring=x=>x<=0?0:1-Math.exp(-x*7)*Math.cos(x*18);
+const $=id=>document.getElementById(id);
+const MS=(+new URLSearchParams(location.search).get('ms')||1892)/1000;
+const dash=(id,p)=>{ const e=$(id); e.style.strokeDashoffset=(1-clamp(p)).toFixed(4); e.style.fillOpacity=clamp((p-0.75)/0.25).toFixed(3); };
+const pop=(el,p,x,y)=>{ const k=0.6+0.4*spring(p); el.setAttribute('transform',`translate(${x} ${y}) scale(${k.toFixed(3)}) translate(${-x} ${-y})`); el.style.opacity=clamp(p*4); };
+const sea=document.getElementById('sea');
+// burst lines
+const burst=$('burst'); for(let i=0;i<12;i++){const l=document.createElementNS('http://www.w3.org/2000/svg','line'); burst.appendChild(l);}
+function render(t){
+  // 0.0-2.4 buildings draw + labels + ship (sentence 1)
+  dash('sea',seg(t,0.2,1.6));
+  dash('ex1',seg(t,0.15,0.8)); dash('ex2',seg(t,0.6,1.0)); dash('ex3',seg(t,0.8,1.2));
+  dash('by1',seg(t,0.45,1.1)); dash('by2',seg(t,0.9,1.4)); dash('by3',seg(t,1.2,1.5));
+  pop($('tEx'),seg(t,0.8,1.5),305,800); pop($('tBy'),seg(t,1.1,1.8),1500,800);
+  // ship sails left -> right 1.0..3.4 then fades
+  const sp=seg(t,1.0,3.6), sx=470+eio(sp)*820, sy=700+Math.sin(t*5)*5;
+  $('ship').setAttribute('transform',`translate(${sx.toFixed(1)} ${sy.toFixed(1)}) rotate(${(Math.sin(t*4)*1.6).toFixed(2)})`);
+  $('ship').style.opacity=clamp(seg(t,0.9,1.2))*(1-seg(t,3.7,4.1));
+  $('tShip').style.opacity=clamp(seg(t,1.2,1.6))*(1-seg(t,2.5,2.9)); $('tShip').setAttribute('x',(sx+75).toFixed(1)); $('tShip').setAttribute('y',(sy-100).toFixed(1));
+  // title swap
+  $('tTitle').style.opacity=clamp(seg(t,2.9,3.3))*(1-seg(t,6.0,6.3));
+  // 2.9-5.7 swift lane: envelope crawls buyer->exporter, bar fills, days count, clock spins, big "60-90 days"
+  const lp=seg(t,2.9,3.4); dash('lane',lp);
+  $('tSwift').style.opacity=clamp(seg(t,3.0,3.5))*(1-0.88*seg(t,6.2,6.8));
+  const ep=seg(t,3.2,6.0), ex_=1440-Math.pow(ep,1.0)*430, ey=905+Math.sin(t*3)*3;
+  $('env').setAttribute('transform',`translate(${ex_.toFixed(1)} ${ey.toFixed(1)}) rotate(${(Math.sin(t*2.6)*3).toFixed(2)})`); $('env').style.opacity=clamp(seg(t,3.2,3.6))*(1-0.88*seg(t,6.2,6.8));
+  const bp=seg(t,3.4,5.9); $('bar1').setAttribute('width',(972*eio(bp)).toFixed(1)); $('bar0').style.opacity=clamp(seg(t,3.2,3.6))*(1-0.88*seg(t,6.2,6.8)); $('bar1').style.opacity=clamp(seg(t,3.4,3.7))*(1-0.88*seg(t,6.2,6.8));
+  const day=Math.round(eio(bp)*90); $('tDay').textContent='day '+day; $('tDay').style.opacity=clamp(seg(t,3.4,3.8))*(1-0.88*seg(t,6.2,6.8));
+  const cp=seg(t,3.6,4.2); const cr=eio(bp)*720; $('clock').setAttribute('transform',`translate(1250 560) scale(${(0.5+0.5*spring(cp)).toFixed(3)})`); $('clock').style.opacity=clamp(cp*4)*(1-seg(t,6.3,6.6));
+  $('hand1').setAttribute('transform',`rotate(${cr})`); $('hand2').setAttribute('transform',`rotate(${cr/12})`);
+  const bg=seg(t,4.1,4.9); $('bigHl').setAttribute('width',(Math.min(1,bg)*1120).toFixed(1)); $('bigHl').setAttribute('x',400);
+  dash('bigX',seg(t,6.3,6.8));
+  $('tBig').style.opacity=clamp(seg(t,4.0,4.3))*(1-seg(t,6.9,7.2));
+  // 6.1-9.8 Monad: coin flies buyer -> exporter, counter, result
+  $('tNew').style.opacity=clamp(seg(t,6.1,6.5)); $('newHl').setAttribute('width',(seg(t,6.3,7.0)*560).toFixed(1)); $('newHl').setAttribute('opacity',1); $('newHl').setAttribute('x',140);
+  $('newHl').setAttribute('y',104);
+  const fp=seg(t,6.7,7.3), fx=1440-eo(fp)*1130, fy=700-Math.sin(Math.PI*fp)*90;
+  const on=t>=6.6&&t<7.32;
+  $('coin').style.opacity=on?1:0; $('coin').setAttribute('transform',`translate(${fx.toFixed(1)} ${fy.toFixed(1)}) rotate(${(fp*540).toFixed(1)}) `);
+  const tr=$('trail').children; for(let i=0;i<3;i++){ const q=clamp(fp-0.06*(i+1)); tr[i].setAttribute('cx',(1440-eo(q)*1130).toFixed(1)); tr[i].setAttribute('cy',(700-Math.sin(Math.PI*q)*90).toFixed(1)); tr[i].setAttribute('r',(46-i*8)); }
+  $('trail').style.opacity=(t>6.7&&t<7.5)?1:0;
+  const bs=seg(t,7.28,7.8); const L=burst.children; for(let i=0;i<12;i++){const a=i/12*Math.PI*2, r0=70+bs*60, r1=r0+34*(1-bs); L[i].setAttribute('x1',(310+Math.cos(a)*r0).toFixed(1)); L[i].setAttribute('y1',(700+Math.sin(a)*r0).toFixed(1)); L[i].setAttribute('x2',(310+Math.cos(a)*(r0+r1*0.6)).toFixed(1)); L[i].setAttribute('y2',(700+Math.sin(a)*(r0+r1*0.6)).toFixed(1));}
+  burst.style.opacity=(bs>0&&bs<1)?(1-bs):0;
+  const np=seg(t,7.3,8.3); $('resNum').textContent=(MS*eo(np)).toFixed(1)+' s';
+  const rp=seg(t,7.25,7.6); $('tRes').style.opacity=clamp(rp*3); $('tRes').setAttribute('transform',`translate(960 390) scale(${((0.7+0.3*spring(rp))*(1+0.015*Math.sin(Math.max(0,t-8.4)*6))).toFixed(3)}) translate(-960 -390)`);
+  $('resHl').setAttribute('width',(800*seg(t,7.4,8.0)).toFixed(1)); $('resHl').setAttribute('x',560);
+  $('resSub').style.opacity=clamp(seg(t,7.9,8.4));
+  // exporter wobble on arrival
+  $('ex').setAttribute('transform',`translate(150 ${(-Math.sin(clamp((t-7.3)/0.5)*Math.PI*3)*(1-seg(t,7.3,7.8))*8).toFixed(1)})`);
+}
+window.render=render;
+</script></body></html>
