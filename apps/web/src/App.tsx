@@ -10,12 +10,13 @@ import { ExporterView } from './components/ExporterView';
 import { FinancierView } from './components/FinancierView';
 import { BankOpsView } from './components/BankOpsView';
 import { ExplorerView } from './components/ExplorerView';
+import { MonadApp, initialTab, type MonadTab } from './monad/MonadApp';
 import { useEvents } from './useEvents';
 import type { Org, DomainEventEnvelope } from './types';
 
 const PERSONA_ORG_NAMES = Object.values(ORG_NAMES);
 
-function AppInner() {
+function AppInner({ onMonad }: { onMonad: () => void }) {
   const toast = useToast();
   const [tab, setTab] = useState<Tab>('exporter');
   const [orgs, setOrgs] = useState<Org[]>([]);
@@ -76,6 +77,9 @@ function AppInner() {
 
   return (
     <SessionCtx.Provider value={session}>
+      <button type="button" onClick={onMonad} className="fixed bottom-4 left-4 z-50 rounded-[var(--radius-ui)] border border-line bg-raised px-3 py-1.5 text-sm text-text shadow-lift">
+        Back to Monad console
+      </button>
       <div className="min-h-screen bg-bg pb-24">
         <Header tab={tab} onTab={setTab} />
         <ControlBar />
@@ -91,11 +95,17 @@ function AppInner() {
   );
 }
 
+function Root() {
+  const [tab, setTab] = useState<MonadTab>(initialTab);
+  if (tab === 'legacy') return <AppInner onMonad={() => setTab('lender')} />;
+  return <MonadApp tab={tab} setTab={setTab} />;
+}
+
 export default function App() {
   return (
     <MotionConfig reducedMotion="user">
       <ToastProvider>
-        <AppInner />
+        <Root />
       </ToastProvider>
     </MotionConfig>
   );
