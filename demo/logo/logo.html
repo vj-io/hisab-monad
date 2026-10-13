@@ -1,0 +1,47 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@800&family=Patrick+Hand&display=block" rel="stylesheet">
+<style>
+  html, body { margin: 0; width: 1000px; height: 1000px; background: #f0ede8; }
+  .board {
+    position: relative; width: 1000px; height: 1000px; overflow: hidden;
+    background-color: #f0ede8;
+    background-image:
+      linear-gradient(rgba(10,10,10,.07) 2px, transparent 2px),
+      linear-gradient(90deg, rgba(10,10,10,.07) 2px, transparent 2px);
+    background-size: 100px 100px; background-position: -1px -1px;
+  }
+  svg.ink { position: absolute; inset: 0; }
+  .word {
+    position: absolute; left: 0; right: 0; top: 330px; text-align: center;
+    font: 800 250px/1 "Archivo", sans-serif; color: #0a0a0a; letter-spacing: -8px;
+  }
+  .note {
+    position: absolute; left: 470px; top: 610px;
+    font: 400 92px/1 "Patrick Hand", cursive; color: #0a0a0a; transform: rotate(-4deg);
+  }
+</style>
+</head>
+<body>
+<div class="board">
+  <svg class="ink" viewBox="0 0 1000 1000">
+    <!-- lime highlighter swipe under the wordmark -->
+    <path d="M150 470 C 330 460, 610 464, 852 452 L 858 546 C 620 554, 340 552, 146 562 Z" fill="#c8ff00"/>
+    <!-- hand-drawn frame, two passes for an inked feel -->
+    <path d="M86 92 C 330 80, 690 86, 912 90 C 918 330, 914 680, 910 910 C 680 918, 320 914, 90 908 C 82 690, 86 330, 86 92 Z"
+          fill="none" stroke="#0a0a0a" stroke-width="22" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M100 104 C 340 96, 680 100, 898 104" fill="none" stroke="#0a0a0a" stroke-width="8" stroke-linecap="round"/>
+    <!-- sketched arrow pointing at the "on Monad" note -->
+    <path d="M300 690 C 340 670, 380 660, 440 658" fill="none" stroke="#0a0a0a" stroke-width="14" stroke-linecap="round"/>
+    <path d="M410 634 L 446 658 L 412 686" fill="none" stroke="#0a0a0a" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  <div class="word">Hisab</div>
+  <div class="note">on Monad</div>
+</div>
+<script>
+  window.ready = document.fonts.load('800 250px "Archivo"').then(() => document.fonts.load('92px "Patrick Hand"'));
+</script>
+</body>
+</html>
