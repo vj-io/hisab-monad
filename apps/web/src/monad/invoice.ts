@@ -59,6 +59,7 @@ export function useRead<T>(fn: () => Promise<T>, deps: unknown[]): { data: T | u
   const fnRef = useRef(fn);
   fnRef.current = fn;
   const inflight = useRef(false);
+  const pending = useRef(false); // a refresh arrived mid-request: run once more when it lands
   const alive = useRef(true);
   useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
   const gen = useRef(0);
@@ -69,12 +70,12 @@ export function useRead<T>(fn: () => Promise<T>, deps: unknown[]): { data: T | u
     fnRef.current().then(
       (d) => { if (alive.current && my === gen.current) set({ data: d }); },
       (e) => { if (alive.current && my === gen.current) set((s) => ({ data: s.data, error: String(e?.shortMessage ?? e?.message ?? e) })); },
-    ).finally(() => { inflight.current = false; });
+    ).finally(() => { inflight.current = false; if (pending.current && alive.current) { pending.current = false; fetchNow(); } });
   };
   // deps changed (different invoice / wallet): drop stale results and fetch right away
   useEffect(() => { gen.current++; fetchNow(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, deps);
   useEffect(() => {
-    if (inflight.current || document.hidden) return;
+    if (inflight.current) { pending.current = true; return; } // cadence (and pausing while hidden) is owned by the wallet tick
     fetchNow();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tick]);

@@ -105,7 +105,9 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const id = setInterval(() => { if (!document.hidden) setTick((t) => t + 1); }, 5000);
-    return () => clearInterval(id);
+    const onVisible = () => { if (!document.hidden) setTick((t) => t + 1); };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => { clearInterval(id); document.removeEventListener('visibilitychange', onVisible); };
   }, []);
 
   // Sync Privy -> role slots: bind the wanted role, restore persisted bindings, drop them on logout / different email.
