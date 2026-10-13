@@ -18,7 +18,7 @@ export default function HisabPrivyProvider({ appId, children }: { appId: string;
     <PrivyProvider
       appId={appId}
       config={{
-        loginMethods: ['email'],
+        loginMethods: ['passkey', 'email'],
         appearance: { theme: 'light' },
         defaultChain: monadTestnet,
         supportedChains: [monadTestnet],
@@ -39,7 +39,7 @@ export function PrivyBridge({ onState, apiRef }: { onState: (s: PrivyState) => v
   const { wallets, ready: walletsReady } = useWallets();
   const w = wallets.find((x) => x.walletClientType.startsWith('privy'));
   apiRef.current = {
-    login: () => login({ loginMethods: ['email'] }),
+    login: () => login({ loginMethods: ['passkey', 'email'] }),
     logout,
     client: async () => {
       if (!w) throw new Error('Email wallet not ready yet');

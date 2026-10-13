@@ -12,14 +12,14 @@ export function PrivyRoleControls({ role }: { role: Role }) {
   const fail = (e: unknown) => toast.push('error', e instanceof Error ? e.message : String(e));
   return (
     <>
-      {bound && <span className="d-hand max-w-full truncate text-[16px] text-text" title={slot.address}>{slot.email ?? privy.email ?? 'email wallet'}{slot.live ? '' : ' (connecting)'}</span>}
+      {bound && <span className="d-hand max-w-full truncate text-[16px] text-text" title={slot.address}>{slot.email ?? privy.email ?? 'passkey wallet'}{slot.live ? '' : ' (connecting)'}</span>}
       {bound ? (
         <>
           <Button size="sm" variant="ghost" onClick={() => unbind(role)}>Use burner</Button>
           <Button size="sm" variant="ghost" onClick={() => logoutEmail().catch(fail)}>Log out</Button>
         </>
       ) : (
-        <Button size="sm" variant="ghost" disabled={!privy.ready} onClick={() => bindEmail(role).catch(fail)}>Use email wallet</Button>
+        <Button size="sm" variant="ghost" disabled={!privy.ready} onClick={() => bindEmail(role).catch(fail)}>Passkey / email login</Button>
       )}
     </>
   );
