@@ -43,6 +43,22 @@ Interest is `principal * aprBps * days / (365 * 10,000)` in integer math, so the
 7. **Exporter:** the tier card shows tier 2 (88% advance, 11.5% APR). The next invoice is offered at those terms.
 8. **Lender:** share price moves from 1.0 to 1.010017.
 9. **Explorer:** every invoice state links to its transaction on the Monad testnet explorer.
+10. **Exporter:** click "Register next invoice". SB 6674322 is offered at the new tier (42,900.00 AUSD, 88% at 11.5%).
+
+"Start fresh demo" creates new burner wallets for a clean re-run.
+
+## Wallets and login
+
+Each role (lender, exporter, buyer) runs on a browser burner wallet by default, topped up with test MON by the faucet function. Any role can switch to:
+
+- **Email (Privy):** "Use email wallet" logs in with an email code and binds the Privy embedded wallet on Monad testnet to that role. One email gives one embedded wallet, so one role holds it at a time. Wallet confirmation pop-ups are off for a click-only demo.
+- **Browser wallet:** "Connect browser wallet" uses an injected wallet and switches it to chain 10143.
+
+Privy loads only when `VITE_PRIVY_APP_ID` is set; without it the console runs on burners alone.
+
+## Design
+
+The console uses the Doodle look: grid paper, ink outlines that draw themselves and boil slightly, one lime highlighter, stamped invoice states and a hand-drawn waterfall. Motion is off under `prefers-reduced-motion`; `<html data-boil="off">` turns off the boil alone.
 
 ## Deployed contracts (Monad testnet, chainId 10143)
 
@@ -88,7 +104,7 @@ npx hardhat run scripts/demo-monad.ts --network monadTestnet
 pnpm -F @hisab/contracts deploy:monad
 
 # Web console with Monad API routes
-cd apps/web && vercel dev    # needs DEPLOYER_PRIVATE_KEY and MONAD_RPC_URL in env
+vercel dev --listen 3200    # from repo root; needs DEPLOYER_PRIVATE_KEY, MONAD_RPC_URL and (optional) VITE_PRIVY_APP_ID
 
 # Legacy stack (SWIFT path, local hardhat node)
 pnpm dev
@@ -101,7 +117,7 @@ pnpm e2e
 - **INR off-ramp, ICEGATE, DGFT:** mocked. The UPI payout adapter is a partner off-ramp stand-in.
 - **Shipping-bill attestation:** a demo attester. The deployer holds the CUSTOMS role and registers bills.
 - **Demo mode:** admin can seed credit history (`ExporterCredit.seed`) and backdate financing by 75 days (`setDemoBackdate`). Demo mode is on for testnet only.
-- **Wallets:** burner wallets, funded through the testnet faucet function.
+- **Wallets:** burner wallets by default, funded through the testnet faucet function; Privy email wallets are real embedded wallets on testnet.
 
 ## Built in the hackathon window
 
@@ -129,6 +145,14 @@ Hisab on Monad (13 Oct 2026):
 - `def0290` 2026-10-13 feat(web): Monad console with lender pool, exporter offer, buyer pay page and explorer
 - `a2da795` 2026-10-13 docs: README and submission write-up for Hisab on Monad; size demo gas top-ups for Monad gas-limit billing
 - `21a0681` 2026-10-13 deploy: Hisab on Monad contracts on Monad testnet (chain 10143)
+
+- `1a05ec4` 2026-10-13 docs: list deploy commits in README
+- `f078a9f` 2026-10-13 docs: tidy commit list
+- `873068a` 2026-10-13 feat(web): Privy email login with embedded wallets, robust seed/faucet, Doodle design system
+- `a8860bc` 2026-10-13 feat(web): Doodle restyle of exporter and buyer views, Privy controls in wallet bar
+- `47e4cf6` 2026-10-13 build(web): allow Privy's ox peer range in Vercel npm install
+- `a983dd3` 2026-10-13 build: deploy web from monorepo root so Vercel installs with the pnpm lockfile
+- `12bc387` 2026-10-13 fix(web): explorer labels each bill by its own SB number
 
 <!-- NEW-COMMITS -->
 

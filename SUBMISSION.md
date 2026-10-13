@@ -1,7 +1,7 @@
 # Hisab on Monad: submission write-up
 
 **Live console:** https://hisab-monad.vercel.app · **Repo:** https://github.com/vj-io/hisab-monad
-**Track:** Onchain Finance & Trading · **Bounty:** Agora Best Cross-Border Payments App
+**Track:** Onchain Finance & Trading · **Bounties:** Agora Best Cross-Border Payments App; Privy (email login with embedded wallets)
 
 ## Problem
 
