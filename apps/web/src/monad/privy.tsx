@@ -1,6 +1,6 @@
 // Everything that imports @privy-io/react-auth lives here; it is only loaded (dynamic import) when VITE_PRIVY_APP_ID is set.
-import { useEffect, type MutableRefObject, type ReactNode } from 'react';
-import { PrivyProvider, usePrivy, useSignupWithPasskey, useWallets } from '@privy-io/react-auth';
+import { useEffect, useRef, type MutableRefObject, type ReactNode } from 'react';
+import { PrivyProvider, useCreateWallet, usePrivy, useSignupWithPasskey, useWallets } from '@privy-io/react-auth';
 import { createWalletClient, custom, type Address, type WalletClient } from 'viem';
 import { monadTestnet } from 'viem/chains';
 import { monad } from './chain';
@@ -52,6 +52,14 @@ export function PrivyBridge({ onState, apiRef }: { onState: (s: PrivyState) => v
       return createWalletClient({ account: w.address as Address, chain: monad, transport: custom(provider) });
     },
   };
+  // Headless passkey sign-up does not run the modal's createOnLogin, so create the embedded wallet ourselves.
+  const { createWallet } = useCreateWallet();
+  const creating = useRef(false);
+  useEffect(() => {
+    if (!ready || !walletsReady || !authenticated || w || creating.current) return;
+    creating.current = true;
+    createWallet().catch((e) => console.error('Privy createWallet failed', e)).finally(() => { creating.current = false; });
+  }, [ready, walletsReady, authenticated, w, createWallet]);
   const email = user?.email?.address;
   const address = w?.address as Address | undefined;
   useEffect(() => { onState({ ready: ready && walletsReady, authenticated, email, address }); }, [ready, walletsReady, authenticated, email, address, onState]);
