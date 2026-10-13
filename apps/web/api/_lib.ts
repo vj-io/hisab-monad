@@ -28,17 +28,25 @@ const transient = (e: unknown) => {
  *  then wait for the receipt (also retried, without re-sending). Throws unless the receipt status is success.
  *  `send` is re-invoked per attempt so viem re-reads the pending nonce. */
 export async function sendTx(send: () => Promise<Hex>): Promise<{ hash: Hex; receipt: TransactionReceipt }> {
+  // Monad reverts back-to-back sends from an account under its reserve balance when they land within a
+  // few blocks of each other; a fresh send ~2 s later succeeds. Callers only send idempotent-checked txs.
+  for (let attempt = 0; ; attempt++) {
+    const r = await sendOnce(send);
+    if (r.receipt.status === 'success') return r;
+    if (attempt >= 2) throw Object.assign(new Error(`transaction reverted (${r.hash})`), { status: 502 });
+    await sleep(2000);
+  }
+}
+
+async function sendOnce(send: () => Promise<Hex>): Promise<{ hash: Hex; receipt: TransactionReceipt }> {
   let hash: Hex | undefined;
   for (let i = 0; !hash; i++) {
     try { hash = await send(); }
     catch (e) { if (i >= 2 || !transient(e)) throw e; await sleep(250 * (i + 1) + Math.random() * 250); }
   }
   for (let i = 0; ; i++) {
-    try {
-      const receipt = await publicClient.waitForTransactionReceipt({ hash, timeout: 30_000 });
-      if (receipt.status !== 'success') throw Object.assign(new Error(`transaction reverted (${hash})`), { status: 502 });
-      return { hash, receipt };
-    } catch (e) { if (i >= 2 || !transient(e)) throw e; await sleep(250 * (i + 1)); }
+    try { return { hash, receipt: await publicClient.waitForTransactionReceipt({ hash, timeout: 30_000 }) }; }
+    catch (e) { if (i >= 2 || !transient(e)) throw e; await sleep(250 * (i + 1)); }
   }
 }
 
