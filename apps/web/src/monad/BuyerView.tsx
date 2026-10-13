@@ -6,10 +6,10 @@ import { Empty } from '../ui/Empty';
 import { Field } from '../ui/Field';
 import { Highlight, InkCheck, Waterfall } from './doodle';
 import { RuleRow } from '../ui/RuleRow';
-import { C, DEFAULT_SB, deployed, fmtAusd, fmtDate, parseAusd, publicClient, sbHashFor } from './chain';
+import { C, deployed, fmtAusd, fmtDate, parseAusd, publicClient } from './chain';
 import { ausdAbi, engineAbi, tokenAbi } from './abi';
 import { ActionButton, ErrorBanner, NotDeployed, TxLink, useAction } from './bits';
-import { knownSbNums, readInvoice, rememberSb, useRead } from './invoice';
+import { readInvoice, rememberSb, sbLabelFor, useRead } from './invoice';
 import { useWallets, type TxResult } from './wallets';
 import { monad } from './chain';
 
@@ -30,12 +30,7 @@ export function BuyerView({ sbHash }: { sbHash: Hex }) {
     try { return await fn(); } finally { lock.current = false; }
   };
   const exporterAddr = inv?.reg.exporter;
-  const sbLabel = useMemo(() => {
-    if (!exporterAddr) return '';
-    const cands = [...knownSbNums(exporterAddr), ...Array.from({ length: 50 }, (_, i) => DEFAULT_SB + i)];
-    const n = cands.find((c) => sbHashFor(exporterAddr, c) === sbHash);
-    return n ? `SB ${n}` : `${sbHash.slice(0, 10)}…`;
-  }, [exporterAddr, sbHash]);
+  const sbLabel = useMemo(() => (exporterAddr ? sbLabelFor(exporterAddr, sbHash) : ''), [exporterAddr, sbHash]);
 
   const acked = !!inv && inv.ack.ackBlock > 0n;
   const status = inv?.pos.status ?? 0;

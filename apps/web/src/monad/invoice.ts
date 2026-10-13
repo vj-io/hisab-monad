@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Address, Hex } from 'viem';
-import { C, DEFAULT_SB, deployed, publicClient, STATUS } from './chain';
+import { C, DEFAULT_SB, deployed, publicClient, sbHashFor, STATUS } from './chain';
 import { creditAbi, engineAbi, registryAbi, tokenAbi } from './abi';
 import { useWallets } from './wallets';
 
@@ -102,4 +102,12 @@ export function rememberSbNum(exporter: Address, n: number) {
   const l = knownSbNums(exporter);
   if (l.includes(n)) return;
   try { localStorage.setItem(numsKey(exporter), JSON.stringify([...l, n])); } catch { /* ignore */ }
+}
+
+/** "SB 6674322" for a bill hash, searching this exporter's known bill numbers and the demo range. */
+export function sbLabelFor(exporter: Address | undefined, sbHash: Hex): string {
+  if (!exporter) return `${sbHash.slice(0, 10)}…`;
+  const cands = [...knownSbNums(exporter), ...Array.from({ length: 50 }, (_, i) => DEFAULT_SB + i)];
+  const n = cands.find((c) => sbHashFor(exporter, c) === sbHash);
+  return n ? `SB ${n}` : `${sbHash.slice(0, 10)}…`;
 }

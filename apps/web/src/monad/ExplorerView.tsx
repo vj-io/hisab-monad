@@ -7,7 +7,7 @@ import { InkCheck, InkCircle, InkLine } from './doodle';
 import { C, GRACE, deployed, fmtAusd, fmtDate, publicClient, sbHashFor } from './chain';
 import { engineAbi } from './abi';
 import { ActionButton, ErrorBanner, NotDeployed, TxLink, useAction } from './bits';
-import { knownSb, readInvoice, useRead, type Invoice } from './invoice';
+import { knownSb, readInvoice, sbLabelFor, useRead, type Invoice } from './invoice';
 import { useWallets } from './wallets';
 
 /** Find the tx for sbHash among the logs of one contract in one exact block. */
@@ -34,7 +34,7 @@ function InvoiceTimeline({ i }: { i: Invoice }) {
   const { data: steps } = useRead(() => timeline(i), [i.sbHash, i.mintedBlock, i.ack.ackBlock, i.pos.financedBlock, i.pos.settledBlock]);
   const overdue = i.pos.status === 1 && Date.now() / 1000 > Number(i.pos.dueDate) + GRACE;
   return (
-    <Panel title={<span className="font-display">SB 6674321 <span className="font-mono text-xs text-faint">{i.sbHash.slice(0, 10)}…</span></span>} action={<Stamp state={i.statusName} tone={i.statusName === 'DEFAULTED' ? 'danger' : undefined} />}>
+    <Panel title={<span className="font-display">{sbLabelFor(i.reg.exporter, i.sbHash)} <span className="font-mono text-xs text-faint">{i.sbHash.slice(0, 10)}…</span></span>} action={<Stamp state={i.statusName} tone={i.statusName === 'DEFAULTED' ? 'danger' : undefined} />}>
       <RuleRow label="Amount" value={<span className="font-mono tabular">{fmtAusd(i.amount)} AUSD</span>} />
       {i.pos.shortfall > 0n && <RuleRow label="Shortfall" value={<span className="font-mono tabular text-danger">{fmtAusd(i.pos.shortfall)} AUSD</span>} />}
       {steps && (
