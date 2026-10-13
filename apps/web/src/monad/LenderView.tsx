@@ -3,13 +3,14 @@ import type { Abi } from 'viem';
 import { Panel } from '../ui/Panel';
 import { Stamp } from '../ui/Stamp';
 import { Empty } from '../ui/Empty';
+import { Skeleton } from '../ui/Skeleton';
 import { Highlight, InkBar, InkBox } from './doodle';
 import { Field } from '../ui/Field';
 import { RuleRow } from '../ui/RuleRow';
 import { C, exactAusd, fmtAusd, parseAusd, publicClient } from './chain';
 import { ausdAbi, poolAbi } from './abi';
 import { ActionButton, ErrorBanner, NotDeployed, TxLink, useAction } from './bits';
-import { knownSb, readInvoice, useRead } from './invoice';
+import { knownSb, readInvoice, sbLabelFor, useRead } from './invoice';
 import { useWallets } from './wallets';
 import { deployed } from './chain';
 
@@ -98,11 +99,11 @@ export function LenderView() {
 
       <div>
         <Panel title="Funded invoices">
-          {funded && funded.length ? (
+          {!funded ? <Skeleton className="h-16" /> : funded.length ? (
             <div className="grid gap-3">
               {funded.map((i, n) => (
                 <InkBox key={i.sbHash} stroke={2.5} delay={0.1 * n} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-3 py-2.5">
-                  <span className="font-mono text-xs">{i.sbHash.slice(0, 10)}…</span>
+                  <span className="font-display text-sm font-semibold">{sbLabelFor(i.reg.exporter, i.sbHash)}</span>
                   <span className="font-mono tabular text-sm">{fmtAusd(i.pos.principal)} AUSD <span className="text-muted">at</span> {(i.pos.aprBps / 100).toFixed(2)}%</span>
                   <Stamp state={i.statusName} tone={i.statusName === 'DEFAULTED' ? 'danger' : undefined} />
                 </InkBox>

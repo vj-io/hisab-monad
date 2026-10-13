@@ -2,6 +2,7 @@ import type { Abi, Address, Hex } from 'viem';
 import { Panel } from '../ui/Panel';
 import { Stamp } from '../ui/Stamp';
 import { Empty } from '../ui/Empty';
+import { Skeleton } from '../ui/Skeleton';
 import { RuleRow } from '../ui/RuleRow';
 import { InkCheck, InkCircle, InkLine } from './doodle';
 import { C, GRACE, deployed, fmtAusd, fmtDate, publicClient, sbHashFor } from './chain';
@@ -81,7 +82,7 @@ export function ExplorerView() {
   return (
     <div className="mx-auto grid max-w-3xl gap-4 p-4">
       {!deployed && <NotDeployed />}
-      {list && list.length ? list.map((i) => <InvoiceTimeline key={i.sbHash} i={i} />) : <Empty message="No invoices yet. Load the demo invoice from the Exporter tab." />}
+      {!list ? <Skeleton className="h-64" /> : list.length ? list.map((i) => <InvoiceTimeline key={i.sbHash} i={i} />) : <Empty message="No invoices yet. Load the demo invoice from the Exporter tab." />}
     </div>
   );
 }
