@@ -128,6 +128,9 @@ Hisab on Monad (13 Oct 2026):
 - `2a06616` 2026-10-13 feat(contracts): AUSD financing pool, exporter credit tiers and token-moving waterfall
 - `def0290` 2026-10-13 feat(web): Monad console with lender pool, exporter offer, buyer pay page and explorer
 
+- `a2da795` 2026-10-13 docs: README and submission write-up for Hisab on Monad; size demo gas top-ups for Monad gas-limit billing
+- `21a0681` 2026-10-13 deploy: Hisab on Monad contracts on Monad testnet (chain 10143)
+
 <!-- NEW-COMMITS -->
 
 ## Known limits
