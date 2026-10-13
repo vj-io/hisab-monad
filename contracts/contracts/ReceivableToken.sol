@@ -4,6 +4,8 @@ pragma solidity 0.8.24;
 import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import {ERC1155Supply} from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
 import {ERC1155Holder} from "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
+import {EIP712} from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
+import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {RoleAware} from "./RoleAware.sol";
 
 interface IShippingBillRegistryView {
@@ -32,7 +34,7 @@ interface IPayoutLedgerView {
 
 /// @notice ERC1155 receivable token. id = uint256(sbHash), supply = fobMinor.
 /// The contract is its own escrow: locked units are transferred to address(this).
-contract ReceivableToken is ERC1155, ERC1155Supply, ERC1155Holder, RoleAware {
+contract ReceivableToken is ERC1155, ERC1155Supply, ERC1155Holder, RoleAware, EIP712 {
     uint8 public constant ADVANCE_LEG = 0; // PayoutLedger.Leg.ADVANCE
 
     struct Lock {
@@ -47,11 +49,26 @@ contract ReceivableToken is ERC1155, ERC1155Supply, ERC1155Holder, RoleAware {
     mapping(uint256 => Lock[]) public locks;
     mapping(uint256 => uint64) public lockedTotal;
 
+    /// @notice Buyer acknowledgement of an invoice, signed off-chain (EIP-712) and submitted by anyone.
+    struct Ack {
+        address buyer;
+        uint256 amount;
+        uint64 dueDate;
+        uint64 ackBlock;
+    }
+
+    bytes32 public constant ACK_TYPEHASH =
+        keccak256("Acknowledgement(bytes32 sbHash,address buyer,uint256 amount,uint64 dueDate)");
+
+    mapping(bytes32 => Ack) public acks;
+    mapping(uint256 => uint64) public mintedBlock;
+
     IShippingBillRegistryView public registry;
     IPayoutLedgerView public payoutLedger;
 
     event TokenLocked(uint256 indexed id, address indexed financier, uint64 units, uint64 advanceInrMinor, uint16 rateBps);
     event TokenReleased(uint256 indexed id, address indexed financier, uint64 units);
+    event Acknowledged(bytes32 indexed sbHash, address indexed buyer, uint256 amount, uint64 dueDate);
 
     error AlreadyLocked(uint256 id, address existingFinancier);
     error Locked(uint256 id);
@@ -60,8 +77,11 @@ contract ReceivableToken is ERC1155, ERC1155Supply, ERC1155Holder, RoleAware {
     error AdvanceAlreadyPaid();
     error NoActiveLock();
     error RegistryNotSet();
+    error UnknownBill();
+    error AlreadyAcknowledged();
+    error BadSignature();
 
-    constructor(address rolesAddr, string memory uri_) ERC1155(uri_) RoleAware(rolesAddr) {}
+    constructor(address rolesAddr, string memory uri_) ERC1155(uri_) RoleAware(rolesAddr) EIP712("Hisab", "1") {}
 
     function setRegistry(address registryAddr) external onlyRole(roles.DEFAULT_ADMIN_ROLE()) {
         registry = IShippingBillRegistryView(registryAddr);
@@ -75,6 +95,16 @@ contract ReceivableToken is ERC1155, ERC1155Supply, ERC1155Holder, RoleAware {
     function mint(address exporter, uint256 id, uint256 amount) external {
         if (msg.sender != address(registry)) revert Unauthorized(bytes32(0), msg.sender);
         _mint(exporter, id, amount, "");
+        mintedBlock[id] = uint64(block.number);
+    }
+
+    function acknowledge(bytes32 sbHash, address buyer, uint256 amount, uint64 dueDate, bytes calldata sig) external {
+        if (_exporterOf(uint256(sbHash)) == address(0)) revert UnknownBill();
+        if (acks[sbHash].buyer != address(0)) revert AlreadyAcknowledged();
+        bytes32 digest = _hashTypedDataV4(keccak256(abi.encode(ACK_TYPEHASH, sbHash, buyer, amount, dueDate)));
+        if (buyer == address(0) || ECDSA.recover(digest, sig) != buyer) revert BadSignature();
+        acks[sbHash] = Ack(buyer, amount, dueDate, uint64(block.number));
+        emit Acknowledged(sbHash, buyer, amount, dueDate);
     }
 
     function adjustSupply(uint256 id, uint256 newSupply) external {
@@ -112,6 +142,34 @@ contract ReceivableToken is ERC1155, ERC1155Supply, ERC1155Holder, RoleAware {
         registry.setState(bytes32(id), registry.FINANCED());
 
         emit TokenLocked(id, financier, units, advanceInrMinor, rateBps);
+    }
+
+    /// @notice Engine path: escrow the exporter's full supply, no exporter signature needed.
+    /// `financier` is the pool; `advance` is recorded in the legacy Lock fields.
+    function lockFor(uint256 id, address exporter, address pool, uint256 advance, uint16 aprBps)
+        external
+        onlyRole(roles.INTERNAL_ROLE())
+    {
+        if (lockedTotal[id] != 0) revert AlreadyLocked(id, locks[id][0].financier);
+
+        uint64 units = uint64(totalSupply(id));
+        _safeTransferFrom(exporter, address(this), id, units, "");
+
+        locks[id].push(
+            Lock({
+                financier: pool,
+                lockedUnits: units,
+                advanceInrMinor: uint64(advance),
+                rateBps: aprBps,
+                lockTs: uint64(block.timestamp),
+                active: true
+            })
+        );
+        lockedTotal[id] += units;
+
+        registry.setState(bytes32(id), registry.FINANCED());
+
+        emit TokenLocked(id, pool, units, uint64(advance), aprBps);
     }
 
     function release(uint256 id, uint256 lockIdx) external onlyRole(roles.FINANCIER_ROLE()) {
