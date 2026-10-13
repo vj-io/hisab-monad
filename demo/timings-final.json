@@ -1,0 +1,98 @@
+[
+ {
+  "t": 0.4,
+  "end": 14.251,
+  "dur": 13.851,
+  "text": "An exporter ships today, and gets paid sixty to ninety days later. Hisab on Monad advances that cash in dollars, the day the goods ship. It is built for small exporters, and for onchain lenders who want short, real-world yield."
+ },
+ {
+  "t": 17.401,
+  "end": 24.059,
+  "dur": 6.658,
+  "text": "This is the live console, on Monad testnet. Three roles: lender, exporter, buyer. Each has its own wallet."
+ },
+ {
+  "t": 29.051,
+  "end": 33.545,
+  "dur": 4.494,
+  "text": "Burner wallets by default. Or a browser wallet, or email login through Privy."
+ },
+ {
+  "t": 39.861,
+  "end": 49.038,
+  "dur": 9.177,
+  "text": "Exporter first. One click funds gas, registers a forty-eight thousand seven hundred fifty dollar shipping bill, and seeds two on-time invoices of history."
+ },
+ {
+  "t": 50.484,
+  "end": 57.928,
+  "dur": 7.444,
+  "text": "That makes tier one: eighty percent advance, at twelve and a half percent A P R. The offer is thirty-nine thousand A U S D."
+ },
+ {
+  "t": 67.377,
+  "end": 72.734,
+  "dur": 5.357,
+  "text": "Lender next. Mint test A U S D, then deposit one hundred thousand. Shares are minted."
+ },
+ {
+  "t": 75.783,
+  "end": 82.192,
+  "dur": 6.409,
+  "text": "The buyer signs an E I P seven-twelve message with the amount and due date. Without it, financing reverts."
+ },
+ {
+  "t": 83.27,
+  "end": 92.907,
+  "dur": 9.637,
+  "text": "Accept the offer. The receivable locks to the pool, and thirty-nine thousand A U S D arrives in the same transaction. Monad confirms it in under a second."
+ },
+ {
+  "t": 93.358,
+  "end": 97.335,
+  "dur": 3.977,
+  "text": "Finance the same bill again, and the contract refuses. Already locked."
+ },
+ {
+  "t": 97.785,
+  "end": 112.263,
+  "dur": 14.478,
+  "text": "Now the buyer pays. One transaction splits it. Forty thousand and one dollars, seventy-one cents, to the pool: principal plus seventy-five days of interest. A twenty-six dollar fee. And eight thousand seven hundred twenty-two to the exporter."
+ },
+ {
+  "t": 112.714,
+  "end": 121.486,
+  "dur": 8.772,
+  "text": "The exporter moves up to tier two: eighty-eight percent advance, at eleven and a half percent. Register the next invoice, and it is offered at those terms."
+ },
+ {
+  "t": 123.094,
+  "end": 126.584,
+  "dur": 3.49,
+  "text": "The lender's share price has stepped up, as interest is recognised."
+ },
+ {
+  "t": 128.901,
+  "end": 136.355,
+  "dur": 7.454,
+  "text": "The explorer links every state to its Monad transaction. The payment is one transaction, with three A U S D transfers."
+ },
+ {
+  "t": 136.805,
+  "end": 146.981,
+  "dur": 10.176,
+  "text": "Short pays are marked partial. Past the due date plus grace, a default drops the exporter to tier zero. Twenty-eight contract tests pass. The legacy SWIFT path is kept."
+ },
+ {
+  "t": 147.432,
+  "end": 158.493,
+  "dur": 11.061,
+  "text": "Why Monad? Four-hundred-millisecond blocks, fast finality, and low fees make a ten-thousand-dollar invoice economical. A U S D is the single asset, a mock on testnet."
+ },
+ {
+  "t": 158.953,
+  "end": 164.938,
+  "dur": 5.985,
+  "text": "Hisab on Monad. Live now, code on GitHub. Built on Monad testnet, with A U S D and Privy."
+ }
+]

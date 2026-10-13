@@ -16,3 +16,15 @@ apps/web/vite.config.js
 apps/web/vite.config.d.ts
 brag-output*/
 .vercel
+
+demo/*.mp4
+demo/*.wav
+demo/frames/
+demo/.cache/
+demo/.venv/
+demo/node_modules/
+demo/raw/
+demo/.narration-cache/
+demo/fail-*.png
+demo/timings.json
+demo/video-path.txt

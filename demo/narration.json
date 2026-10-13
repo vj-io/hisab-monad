@@ -1,0 +1,66 @@
+[
+{
+"id": "intro",
+"text": "An exporter ships today, and gets paid sixty to ninety days later. Hisab on Monad advances that cash in dollars, the day the goods ship. It is built for small exporters, and for onchain lenders who want short, real-world yield."
+},
+{
+"id": "console",
+"text": "This is the live console, on Monad testnet. Three roles: lender, exporter, buyer. Each has its own wallet."
+},
+{
+"id": "wallets",
+"text": "Burner wallets by default. Or a browser wallet, or email login through Privy."
+},
+{
+"id": "load",
+"text": "Exporter first. One click funds gas, registers a forty-eight thousand seven hundred fifty dollar shipping bill, and seeds two on-time invoices of history."
+},
+{
+"id": "tier",
+"text": "That makes tier one: eighty percent advance, at twelve and a half percent A P R. The offer is thirty-nine thousand A U S D."
+},
+{
+"id": "lender",
+"text": "Lender next. Mint test A U S D, then deposit one hundred thousand. Shares are minted."
+},
+{
+"id": "ack",
+"text": "The buyer signs an E I P seven-twelve message with the amount and due date. Without it, financing reverts."
+},
+{
+"id": "accept",
+"text": "Accept the offer. The receivable locks to the pool, and thirty-nine thousand A U S D arrives in the same transaction. Monad confirms it in under a second."
+},
+{
+"id": "again",
+"text": "Finance the same bill again, and the contract refuses. Already locked."
+},
+{
+"id": "pay",
+"text": "Now the buyer pays. One transaction splits it. Forty thousand and one dollars, seventy-one cents, to the pool: principal plus seventy-five days of interest. A twenty-six dollar fee. And eight thousand seven hundred twenty-two to the exporter."
+},
+{
+"id": "tier2",
+"text": "The exporter moves up to tier two: eighty-eight percent advance, at eleven and a half percent. Register the next invoice, and it is offered at those terms."
+},
+{
+"id": "share",
+"text": "The lender's share price has stepped up, as interest is recognised."
+},
+{
+"id": "explorer",
+"text": "The explorer links every state to its Monad transaction. The payment is one transaction, with three A U S D transfers."
+},
+{
+"id": "edge",
+"text": "Short pays are marked partial. Past the due date plus grace, a default drops the exporter to tier zero. Twenty-eight contract tests pass. The legacy SWIFT path is kept."
+},
+{
+"id": "why",
+"text": "Why Monad? Four-hundred-millisecond blocks, fast finality, and low fees make a ten-thousand-dollar invoice economical. A U S D is the single asset, a mock on testnet."
+},
+{
+"id": "end",
+"text": "Hisab on Monad. Live now, code on GitHub. Built on Monad testnet, with A U S D and Privy."
+}
+]
