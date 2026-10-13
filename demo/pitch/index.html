@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Hisab on Monad - team pitch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=JetBrains+Mono:wght@400;500;700&family=Patrick+Hand&display=block" rel="stylesheet">
+<style>
+  :root { --ink:#0a0a0a; --paper:#f0ede8; --muted:#6f6c66; --accent:#c8ff00; --card:#f8f6f1; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { width:1920px; height:1080px; overflow:hidden; background:var(--paper); color:var(--ink); }
+  #stage { position:absolute; inset:0; overflow:hidden; background:var(--paper); }
+  #cam { position:absolute; left:0; top:0; transform-origin:0 0; will-change:transform; }
+  #gridw { position:absolute; left:-1200px; top:-1200px; width:8400px; height:10800px;
+    background-image: linear-gradient(rgba(10,10,10,.07) 1.5px, transparent 1.5px), linear-gradient(90deg, rgba(10,10,10,.07) 1.5px, transparent 1.5px);
+    background-size: 60px 60px; }
+  #grain { position:absolute; inset:0; opacity:.35; mix-blend-mode:multiply; pointer-events:none; z-index:50; }
+  .panel { position:absolute; width:1920px; height:1080px; }
+  .panel svg.ink { position:absolute; left:0; top:0; overflow:visible; z-index:1; }
+  .panel svg.ink.top { z-index:3; }
+  .panel svg.ink path { fill:none; stroke:var(--ink); stroke-linecap:round; stroke-linejoin:round; }
+  .t { position:absolute; will-change:clip-path, transform, opacity; z-index:2; white-space:nowrap; }
+  .hand { font-family:'Patrick Hand', cursive; }
+  .disp { font-family:'Archivo', sans-serif; font-weight:800; letter-spacing:-.04em; line-height:.95; }
+  .body { font-family:'Archivo', sans-serif; font-weight:500; letter-spacing:-.01em; line-height:1.2; }
+  .mono { font-family:'JetBrains Mono', monospace; }
+  .mk { position:relative; display:inline-block; z-index:0; }
+  .mk > i { position:absolute; left:-.08em; right:-.08em; top:.52em; bottom:-.02em; background:var(--accent); z-index:-1; transform-origin:left center; transform:scaleX(0) skewX(-6deg); }
+  .chip { background:var(--ink); color:var(--paper); padding:10px 18px; font-size:26px; letter-spacing:.08em; line-height:1.3; border-radius:4px; }
+  .chip.lime { background:var(--accent); color:var(--ink); }
+  .stamp { font-family:'Archivo', sans-serif; font-weight:800; letter-spacing:.02em; padding:6px 18px; border:5px solid var(--ink); background:var(--accent); line-height:1; }
+  .shotbox { position:absolute; overflow:hidden; z-index:2; background:var(--card); }
+  .shotimg { position:absolute; left:0; top:0; display:block; }
+  .photo { position:absolute; overflow:hidden; z-index:2; background:#111; }
+  .photo img { position:absolute; display:block; max-width:none; }
+  .coin { position:absolute; z-index:4; width:64px; height:64px; border-radius:50%; background:var(--accent); border:5px solid var(--ink);
+    font-family:'JetBrains Mono', monospace; font-weight:700; font-size:26px; display:flex; align-items:center; justify-content:center; opacity:0; }
+  .chipfly { position:absolute; z-index:4; opacity:0; background:var(--accent); border:5px solid var(--ink); padding:8px 16px; font-family:'JetBrains Mono', monospace; font-weight:700; font-size:28px; border-radius:6px; }
+  #avl { position:absolute; left:0; top:0; z-index:20; overflow:visible; pointer-events:none; }
+  .dockname { position:absolute; z-index:22; font-family:'JetBrains Mono', monospace; font-weight:700; font-size:24px; letter-spacing:.12em; background:var(--accent); color:var(--ink); padding:6px 14px; border:4px solid var(--ink); border-radius:4px; opacity:0; }
+  #pencil, #cursor { position:absolute; left:0; top:0; z-index:30; pointer-events:none; display:none; }
+  #ripple { position:absolute; z-index:29; width:70px; height:70px; margin:-35px 0 0 -35px; border:6px solid var(--ink); border-radius:50%; opacity:0; pointer-events:none; }
+  #wipe { position:absolute; inset:0; z-index:60; pointer-events:none; overflow:visible; }
+  #wipe path { fill:none; stroke-linecap:round; stroke-linejoin:round; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="cam"><div id="gridw"></div></div>
+  <svg id="grain" width="1920" height="1080"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="3"/><feColorMatrix values="0 0 0 0 .5  0 0 0 0 .45  0 0 0 0 .4  0 0 0 .18 0"/></filter><rect width="1920" height="1080" filter="url(#n)"/></svg>
+  <svg width="0" height="0" style="position:absolute">
+    <filter id="boil" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence id="turb" type="fractalNoise" baseFrequency="0.018" numOctaves="2" seed="1"/>
+      <feDisplacementMap in="SourceGraphic" scale="4.5" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </svg>
+  <svg id="avl" width="1920" height="1080"></svg>
+  <div class="dockname" id="nameV">VAIBHAV</div><div class="dockname" id="nameB">BHAVYA</div>
+  <div id="ripple"></div>
+  <svg id="pencil" width="90" height="90" viewBox="0 0 100 100"><path d="M4 96 L16 66 L70 12 L88 30 L34 84 Z" fill="#c8ff00" stroke="#0a0a0a" stroke-width="5" stroke-linejoin="round"/><path d="M16 66 L34 84" stroke="#0a0a0a" stroke-width="5"/><path d="M70 12 L88 30 L94 18 Q90 6 80 6 Z" fill="#f0ede8" stroke="#0a0a0a" stroke-width="5" stroke-linejoin="round"/></svg>
+  <svg id="cursor" width="60" height="70" viewBox="0 0 60 70"><path d="M3 3 L3 52 L16 40 L26 62 L36 57 L26 36 L44 36 Z" fill="#f8f6f1" stroke="#0a0a0a" stroke-width="5" stroke-linejoin="round"/></svg>
+  <svg id="wipe" width="1920" height="1080"><path id="wipe-p" pathLength="1"/></svg>
+</div>
+<script src="layout.js"></script>
+<script src="engine.js"></script>
+<script src="avatars.js"></script>
+<script src="scenes_a.js"></script>
+<script src="scenes_b.js"></script>
+<script src="scenes_c.js"></script>
+<script src="runtime.js"></script>
+</body>
+</html>

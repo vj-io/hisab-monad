@@ -1,0 +1,154 @@
+[
+ {
+  "id": "L1",
+  "who": "V",
+  "ch": "hello",
+  "text": "Hi, I'm Vaibhav Jangid, co-founder of Hisab on Monad. I lead product and engineering.",
+  "t": 0.7,
+  "end": 6.74
+ },
+ {
+  "id": "L2",
+  "who": "B",
+  "ch": "hello",
+  "text": "And I'm Bhavya Dhoot, the other co-founder. I build the smart contracts and the backend.",
+  "t": 7.08,
+  "end": 11.781
+ },
+ {
+  "id": "L3",
+  "who": "V",
+  "ch": "problem",
+  "text": "Here's the problem. An exporter ships today, but gets paid sixty to ninety days later.",
+  "t": 12.931,
+  "end": 18.185
+ },
+ {
+  "id": "L4",
+  "who": "B",
+  "ch": "problem",
+  "text": "So their working capital sits locked in every open invoice. And banks finance collateral, not invoices.",
+  "t": 18.525,
+  "end": 24.745
+ },
+ {
+  "id": "L5",
+  "who": "V",
+  "ch": "problem",
+  "text": "Small tickets cost more to underwrite and reconcile than they earn.",
+  "t": 25.085,
+  "end": 28.78
+ },
+ {
+  "id": "L6",
+  "who": "B",
+  "ch": "problem",
+  "text": "Lenders stay away too. There is no shared record of whether past invoices were paid, and the same invoice can be pledged twice.",
+  "t": 29.12,
+  "end": 36.066
+ },
+ {
+  "id": "L7",
+  "who": "V",
+  "ch": "problem",
+  "text": "The result is a trade-finance gap, estimated in the trillions of dollars.",
+  "t": 36.406,
+  "end": 41.018
+ },
+ {
+  "id": "L8",
+  "who": "B",
+  "ch": "product",
+  "text": "So we built Hisab on Monad. The shipping bill is tokenised, and the buyer acknowledges it with a signature.",
+  "t": 42.168,
+  "end": 48.286
+ },
+ {
+  "id": "L9",
+  "who": "V",
+  "ch": "product",
+  "text": "Then a lender pool advances A U S D the day the goods ship, priced by the exporter's onchain credit tier.",
+  "t": 48.626,
+  "end": 55.497
+ },
+ {
+  "id": "L10",
+  "who": "V",
+  "ch": "product",
+  "text": "In our demo, the exporter sees thirty-nine thousand, and accepts it in one click.",
+  "t": 55.777,
+  "end": 60.751
+ },
+ {
+  "id": "L11",
+  "who": "B",
+  "ch": "product",
+  "text": "Try to finance the same bill twice, and the contract refuses. Double financing, blocked.",
+  "t": 61.091,
+  "end": 66.429
+ },
+ {
+  "id": "L12",
+  "who": "V",
+  "ch": "product",
+  "text": "When the buyer pays, one transaction repays the pool, takes the fee, and pays the exporter.",
+  "t": 66.769,
+  "end": 72.391
+ },
+ {
+  "id": "L13",
+  "who": "B",
+  "ch": "product",
+  "text": "Pay on time, and the exporter moves up a tier. Eighty percent advance becomes eighty-eight.",
+  "t": 72.731,
+  "end": 77.732
+ },
+ {
+  "id": "L14",
+  "who": "V",
+  "ch": "why",
+  "text": "The original Hisab matched messy SWIFT payment messages to shipments. It only recorded entitlements.",
+  "t": 78.882,
+  "end": 85.468
+ },
+ {
+  "id": "L15",
+  "who": "B",
+  "ch": "why",
+  "text": "On Monad, the money itself moves, in A U S D. Blocks take four hundred milliseconds.",
+  "t": 85.808,
+  "end": 91.017
+ },
+ {
+  "id": "L16",
+  "who": "B",
+  "ch": "why",
+  "text": "And fees stay low enough for a ten-thousand-dollar invoice.",
+  "t": 91.297,
+  "end": 94.485
+ },
+ {
+  "id": "L17",
+  "who": "V",
+  "ch": "why",
+  "text": "Lenders get a shared onchain credit record to price from. That is what makes the next offer cheaper.",
+  "t": 94.825,
+  "end": 100.876
+ },
+ {
+  "id": "L18",
+  "who": "B",
+  "ch": "why",
+  "text": "It's live on Monad testnet today.",
+  "t": 101.216,
+  "end": 103.397
+ },
+ {
+  "id": "L19",
+  "who": "VB",
+  "ch": "close",
+  "text": "Hisab on Monad.",
+  "t": 104.547,
+  "end": 105.973
+ }
+]

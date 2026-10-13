@@ -42,3 +42,13 @@ demo/zoom/raw_prev_*/
 demo/zoom/ov/
 demo/anim/stills/
 demo/**/.narration-cache/
+
+demo/pitch/*.mp4
+demo/pitch/*.wav
+demo/pitch/frames/
+demo/pitch/stills/
+demo/pitch/assets/photos/
+demo/pitch/work/
+demo/pitch/.narration-cache/
+demo/pitch/**/.narration-cache/
+demo/pitch/assets/shots/
