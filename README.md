@@ -1,68 +1,136 @@
-# Hisab — Export Receivable Liquidity & Auto-Realisation Ledger
+# Hisab on Monad
 
-**Hisab (हिसाब)** — "the account / the reckoning".
+Hisab on Monad gives an MSME exporter dollars on the day goods ship: a lender pool advances AUSD against a tokenised shipping bill, and the buyer's AUSD payment repays the pool and pays the exporter in one transaction.
 
-When an MSME exporter's goods clear customs, their Shipping Bill becomes a tokenized receivable they can discount on day one.
-When the foreign payment lands 75 days later, Hisab matches the messy SWIFT message to the shipment, issues the eBRC,
-repays the financier and pushes the balance to the exporter over UPI. Nobody reconciles anything by hand.
+- **Live console:** https://hisab-monad.vercel.app
+- **Repo:** https://github.com/vj-io/hisab-monad
+- **Track:** Onchain Finance & Trading. **Bounty:** Agora Best Cross-Border Payments App.
 
-```
-Day 0   Goods clear customs ─► Shipping Bill hashed on-chain ─► receivable token minted
-Day 0   Financier discounts token ─► UPI payout: advance to exporter              [LIQUIDITY]
-Day 75  USD lands at AD bank ─► messy MT103 ─► matcher ─► match to Shipping Bill
-Day 75  Realised on-chain ─► eBRC anchored ─► financier repaid ─► balance to exporter [AUTO-REALISATION]
-```
+Hisab began as an export receivable ledger that recorded entitlements off-chain. The Monad version moves the money: AUSD flows from the pool to the exporter at financing, and from the buyer to the pool, fee wallet and exporter at settlement.
 
-## What's in the box
+## How it works
+
+1. Exporter registers a shipping bill. Its hash goes onchain and a receivable token is minted.
+2. Buyer acknowledges the invoice with an EIP-712 signature (amount, due date).
+3. Exporter sees an offer priced by their credit tier and accepts it.
+4. The receivable locks to the pool, and the pool sends the AUSD advance to the exporter in the same transaction.
+5. On or before the due date, the buyer pays the invoice in AUSD from the pay page.
+6. One transaction repays the pool (principal and interest), takes the platform fee, and sends the balance to the exporter.
+7. The exporter's credit record updates, and the next offer reflects the new tier.
+
+### Settlement waterfall (demo numbers)
+
+Invoice SB 6674321, USD 48,750.00, financed at tier 1 (80% advance = 39,000.00, 12.5% APR), backdated 75 days. The buyer's single payment of 48,750.00 splits as:
+
+| Leg | AUSD (base-unit exact) |
+|---|---|
+| Pool: principal | 39,000.000000 |
+| Pool: interest (12.5%, 75 days) | 1,001.712328 |
+| Platform fee (30 bps of remainder) | 26.244863 |
+| Exporter balance | 8,722.042809 |
+| **Total** | **48,750.000000** |
+
+Interest is `principal * aprBps * days / (365 * 10,000)` in integer math, so the pool's total is 40,001.71 to cents. The fee and exporter legs are floored integer division, so the PRD's 8,722.05 becomes 8,722.04 on chain. Rounded to cents the three displayed legs add to 48,749.99; the base-unit legs sum exactly to 48,750.00, and those are the reference.
+
+## Demo script
+
+1. **Exporter:** click "Load demo invoice" to open SB 6674321.
+2. **Lender:** click "Mint test AUSD", then "Deposit". Shares appear.
+3. **Buyer:** click "Acknowledge" on the pay page.
+4. **Exporter:** click "Accept offer". The advance lands in the exporter wallet. Open the Monad transaction link.
+5. **Exporter:** click "Finance again". It reverts with `ALREADY_LOCKED`.
+6. **Buyer:** click "Pay invoice". One transaction splits the payment as in the table above.
+7. **Exporter:** the tier card shows tier 2 (88% advance, 11.5% APR). The next invoice is offered at those terms.
+8. **Lender:** share price moves from 1.0 to 1.010017.
+9. **Explorer:** every invoice state links to its transaction on the Monad testnet explorer.
+
+## Deployed contracts (Monad testnet, chainId 10143)
+
+RPC `https://testnet-rpc.monad.xyz`. Explorer `https://testnet.monadexplorer.com`.
+
+| Contract | Address |
+|---|---|
+| roles (HisabRoles) | <!-- ADDRESSES --> |
+| registry (ShippingBillRegistry) | |
+| token (ReceivableToken) | |
+| engine (RealisationEngine) | |
+| pool (FinancingPool) | |
+| credit (ExporterCredit) | |
+| ausd (MockAUSD) | |
+| remittance (RemittanceRegistry) | |
+| ebrc (EBRCIssuer) | |
+| payoutLedger (PayoutLedger) | |
+
+## Repo layout
 
 | Path | What |
 |---|---|
-| `contracts/` | Solidity 0.8.24 + Hardhat. `ShippingBillRegistry`, `ReceivableToken` (ERC-1155 escrow lock, double-finance guard), `RemittanceRegistry`, `RealisationEngine` (waterfall), `EBRCIssuer`, `PayoutLedger`, `HisabRoles` |
-| `packages/matcher/` | MT103 parser + rules/LLM hybrid matcher. The LLM only proposes references; rules re-verify; thresholds and humans decide |
-| `apps/api/` | Fastify API: ingest, offers and on-chain lock, idempotent UPI payout adapter, ops queue, eBRC verifiable credentials, explorer, SSE, mocks for ICEGATE / SWIFT / UPI / DGFT |
-| `apps/web/` | Vite + React + Tailwind v4 console on the "Neel & Haldi" design system ([`DESIGN.md`](apps/web/DESIGN.md)): Exporter, Financier, Bank Ops, Explorer tabs, demo control bar, phone notification mock |
+| `contracts/` | Solidity 0.8.24 + Hardhat. New: `FinancingPool` (ERC-4626 over AUSD), `ExporterCredit`, `MockAUSD`. Changed: `RealisationEngine` (token-moving waterfall), `ReceivableToken` (EIP-712 acknowledgement, lock to pool). Unchanged: `ShippingBillRegistry`, `HisabRoles`, `RemittanceRegistry`, `EBRCIssuer`, `PayoutLedger`, `RoleAware`. |
+| `packages/matcher/` | MT103 parser and rules/LLM hybrid matcher. Serves the legacy SWIFT preset only. |
+| `apps/api/` | Legacy Fastify API: ingest, offers, idempotent UPI payout adapter, ops queue, eBRC, explorer, SSE. |
+| `apps/web/` | Vite + React + Tailwind console. `src/monad/` holds the Monad views: `MonadApp`, `ExporterView`, `LenderView`, `BuyerView`, `ExplorerView`, plus `wallets`, `chain`, `invoice`, `abi`, `bits`. |
+| `apps/web/api/` | Vercel serverless functions: `_lib.ts` (shared chain client), `seed.ts` (demo seeding), `faucet.ts` (testnet AUSD faucet). |
 
-## Quick start
+## Run locally
 
-Requires Node ≥ 22.13 and pnpm 10.
+Requires Node 22.13+ and pnpm 10.
 
 ```bash
 pnpm install
-pnpm dev          # hardhat node + contract deploy + API (:4000) + web (:5173)
+
+# Contracts
+cd contracts && npx hardhat test
+npx hardhat run scripts/demo-monad.ts --network monadTestnet
+
+# Deploy to Monad testnet (needs contracts/.env with DEPLOYER_PRIVATE_KEY)
+pnpm -F @hisab/contracts deploy:monad
+
+# Web console with Monad API routes
+cd apps/web && vercel dev    # needs DEPLOYER_PRIVATE_KEY and MONAD_RPC_URL in env
+
+# Legacy stack (SWIFT path, local hardhat node)
+pnpm dev
+pnpm e2e
 ```
 
-Open http://localhost:5173 and click **Seed demo** in the control bar (or run `pnpm demo:seed`).
+## What is mocked
 
-Other commands:
+- **AUSD:** no AUSD on Monad testnet, so `MockAUSD` (6 decimals, open `mint`) stands in. The faucet mints it to burner wallets.
+- **INR off-ramp, ICEGATE, DGFT:** mocked. The UPI payout adapter is a partner off-ramp stand-in.
+- **Shipping-bill attestation:** a demo attester. The deployer holds the CUSTOMS role and registers bills.
+- **Demo mode:** admin can seed credit history (`ExporterCredit.seed`) and backdate financing by 75 days (`setDemoBackdate`). Demo mode is on for testnet only.
+- **Wallets:** burner wallets, funded through the testnet faucet function.
 
-```bash
-pnpm test         # contract invariants + matcher presets
-pnpm e2e          # full demo loop over HTTP against the running stack
-pnpm demo:remit   # fire the messy "typo" MT103 at SB 6674321
-```
+## Built in the hackathon window
 
-Other env vars: `API_PORT`, `RPC_URL`, `JWT_SECRET`, `WEBHOOK_URL`, `WEBHOOK_SECRET`, `WEB_ORIGIN`.
+Base Hisab (28–29 Sep 2026), before the Monad build:
 
-## Demo walkthrough
+- `7ca34e9` 2026-09-28 chore: scaffold pnpm workspace
+- `8d16d7d` 2026-09-28 feat(matcher): MT103 parser, rules+LLM hybrid matching engine with demo presets
+- `9edf402` 2026-09-28 feat(contracts): ledger contracts with invariant tests
+- `574e852` 2026-09-28 chore: stop tracking internal spec and planning docs
+- `78d4387` 2026-09-28 feat(api): Fastify backend driving ledger, matcher, payouts and eBRC
+- `2a98dc5` 2026-09-28 fix(api): make demo reset replayable
+- `98cb080` 2026-09-28 feat(web): exporter, financier, ops and explorer console
+- `b3e242f` 2026-09-28 docs: README with quick start, demo walkthrough and design notes; build matcher on install
+- `45c2f32` 2026-09-29 feat(web): redesign console on the Neel & Haldi design system
+- `11f01a4` 2026-09-29 chore: ignore generated launch video output
+- `900dca6` 2026-09-29 refactor(matcher): remove Anthropic extractor, keep offline heuristic extractor
+- `5318ad0` 2026-09-29 refactor(api): always use the offline heuristic extractor
+- `d1da059` 2026-09-29 docs: drop Anthropic/Claude mentions and remove @anthropic-ai/sdk from the lockfile
+- `4faf425` 2026-09-29 chore: trigger contributor stats reindex
 
-1. **Exporter** tab. Seed, open SB 6674321 (USD 48,750). Accept the Citi Trade offer (88% @ 11.5%). The state flips to FINANCED and the phone shows "₹35,88,585 credited".
-2. Accept the Kotak NBFC offer on the same SB. The chain reverts with `ALREADY_LOCKED`, so double financing is impossible.
-3. **75 days later: SWIFT arrives**. The MT103 has `INV 2O24-25/OO91` (letter O for zero) and USD 45 short. Rules miss, the extractor normalises, rules re-verify, and confidence reaches 0.95, which auto-realises.
-4. SB flips to REALISED. The waterfall shows ₹40,86,350 realised: ₹36,72,253 to the financier, ₹12,560 platform fee, ₹4,01,536 to the exporter. The eBRC is issued, and the phone buzzes twice.
-5. **Bundle remittance**. One payment covers two invoices at 0.70 confidence, so it goes to the **Bank Ops** queue with reasons. Approve both candidates.
-6. **Fraud remittance**. The amount is 3× the FOB, so it stays UNMATCHED and raises an alert.
-7. **Explorer**. Verify the eBRC (signature plus on-chain anchor) and view the stats.
+Hisab on Monad (13 Oct 2026):
 
-## Design notes
+- `fa4d208` 2026-10-13 docs: add Hisab on Monad PRD and interface spec
+- `2a06616` 2026-10-13 feat(contracts): AUSD financing pool, exporter credit tiers and token-moving waterfall
+- `def0290` 2026-10-13 feat(web): Monad console with lender pool, exporter offer, buyer pay page and explorer
 
-- **Money never moves on-chain.** Contracts record entitlements and emit events. The payout adapter moves INR over (mock) UPI and writes the UTR hash back. Every payout leg is idempotent on-chain (`DuplicateLeg`) and off-chain (UUIDv5 of sbHash + leg).
-- **Hashes only on the ledger.** Raw Shipping Bill and MT103 documents stay off-chain. `sbHash` and `irmHash` are SHA-256 over RFC 8785 canonical JSON.
-- **Integers for money.** Everything is in paise or cents. Interest uses basis points and a day count.
-- **Read model is disposable.** The SQLite read model is rebuilt from chain events: `pnpm -F @hisab/api projector:rebuild`.
-- **Hackathon-mode infra.** `node:sqlite` stands in for Postgres, an in-process event bus for NATS, local disk for S3, and SSE for WebSockets. Each one is a single module to swap for production.
+<!-- NEW-COMMITS -->
 
-## Tests
+## Known limits
 
-- `contracts`: 13 tests. They cover all 9 ledger invariants (re-register, double lock, locked transfer, IRM over-allocation, low-confidence auto-realise, waterfall conservation fuzzed over 400+ inputs, anchor before realisation, duplicate payout leg, dispute blocking realisation), plus the happy path, partial realisation and release.
-- `packages/matcher`: the parser, all five demo presets landing in their confidence bands, the hallucination guard, exact pro-rata split and candidate filtering.
-- `apps/api` e2e: 29 checks over the full loop, including payout retry with exactly-once confirmation.
+- The faucet is open. It works on testnet only.
+- The explorer and the funded list cover only invoices the browser knows about. There is no indexer yet.
+- Default cure is not implemented. A defaulted exporter drops to tier 0 and stays blocked until cured, but there is no cure flow yet.
+- A third-party dust payment can close an invoice as PARTIAL. The pool is repaid first and the shortfall is recorded.

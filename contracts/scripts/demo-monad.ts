@@ -43,7 +43,7 @@ async function main() {
   // three fresh wallets, funded with a little gas
   const [lender, exporter, buyer] = [0, 1, 2].map(() => ethers.Wallet.createRandom().connect(ethers.provider));
   for (const w of [lender, exporter, buyer]) {
-    await (await s.deployer.sendTransaction({ to: w.address, value: ethers.parseEther("0.05") })).wait();
+    await (await s.deployer.sendTransaction({ to: w.address, value: ethers.parseEther("0.2") })).wait();
   }
   console.log("lender  ", lender.address, "\nexporter", exporter.address, "\nbuyer   ", buyer.address);
 
