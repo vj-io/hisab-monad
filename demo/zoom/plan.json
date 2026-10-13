@@ -1,0 +1,582 @@
+{
+ "CL": 6.553,
+ "END": 142.1515795970726,
+ "TOTAL": 142.55157959707262,
+ "voice": [
+  {
+   "t": 0.3,
+   "text": "Thirty-nine thousand dollars, in an exporter's wallet, the day the goods ship. This is Hisab on Monad."
+  },
+  {
+   "t": 6.853,
+   "text": "Small exporters wait ninety days to get paid. Here, a lender pool advances the cash instead. This is the live console on Monad testnet, with three roles and three wallets."
+  },
+  {
+   "t": 18.219,
+   "text": "Wallets are burners by default. Or connect a browser wallet, or log in with email through Privy."
+  },
+  {
+   "t": 24.212,
+   "text": "Exporter first. One click funds gas, registers a forty-eight thousand seven hundred fifty dollar shipping bill, and seeds two on-time invoices of history."
+  },
+  {
+   "t": 33.839,
+   "text": "That history earns tier one: eighty percent advance, at twelve and a half percent. So the offer is thirty-nine thousand A U S D."
+  },
+  {
+   "t": 43.998,
+   "text": "Now a lender. Mint some test A U S D, deposit a hundred thousand, and the pool mints shares against it."
+  },
+  {
+   "t": 51.128,
+   "text": "Next, the buyer. They sign an E I P seven-twelve message. No signature, no financing."
+  },
+  {
+   "t": 58.937,
+   "text": "Back to the exporter, who accepts the offer. The receivable locks to the pool, and thirty-nine thousand lands in the same transaction. Confirmed in about three seconds, end to end."
+  },
+  {
+   "t": 70.709,
+   "text": "Try to finance the same bill twice, and the contract refuses. Double financing, blocked."
+  },
+  {
+   "t": 78.562,
+   "text": "Now the buyer pays. One transaction, three legs. Forty thousand to the pool, principal plus interest. A twenty-six dollar fee. And eight thousand seven hundred twenty-two to the exporter."
+  },
+  {
+   "t": 91.091,
+   "text": "Paid on time, so the exporter climbs to tier two: eighty-eight percent advance, at eleven and a half. Register the next invoice, and the offer jumps to forty-two thousand nine hundred."
+  },
+  {
+   "t": 103.796,
+   "text": "And the lender? The share price ticked up. That is interest, earned from a real shipment."
+  },
+  {
+   "t": 110.7,
+   "text": "Open the explorer. Every state links to its Monad transaction: registered, acknowledged, financed, paid."
+  },
+  {
+   "t": 117.718,
+   "text": "Short pays are marked partial. A missed due date drops the exporter to tier zero. Twenty-eight contract tests pass, and the legacy SWIFT path is still there."
+  },
+  {
+   "t": 127.298,
+   "text": "Why Monad? Fast finality. Every step you just saw confirmed in about three seconds. And A U S D is the single asset, a mock on testnet."
+  },
+  {
+   "t": 136.764,
+   "text": "Hisab on Monad. Live now, code on GitHub. Built with Monad, A U S D, and Privy."
+  }
+ ],
+ "sfx": [
+  [
+   0.05,
+   "whoosh"
+  ],
+  [
+   6.353,
+   "whoosh"
+  ],
+  [
+   17.899,
+   "whoosh"
+  ],
+  [
+   19.427,
+   "click"
+  ],
+  [
+   19.978,
+   "pop"
+  ],
+  [
+   20.102,
+   "whoosh"
+  ],
+  [
+   22.624,
+   "click"
+  ],
+  [
+   23.865,
+   "whoosh"
+  ],
+  [
+   24.634,
+   "click"
+  ],
+  [
+   25.95,
+   "click"
+  ],
+  [
+   28.067,
+   "ding"
+  ],
+  [
+   38.647,
+   "ding"
+  ],
+  [
+   42.415,
+   "click"
+  ],
+  [
+   43.683,
+   "whoosh"
+  ],
+  [
+   44.538,
+   "click"
+  ],
+  [
+   46.949,
+   "click"
+  ],
+  [
+   48.6,
+   "ding"
+  ],
+  [
+   48.728,
+   "whoosh"
+  ],
+  [
+   51.2,
+   "whoosh"
+  ],
+  [
+   51.203,
+   "click"
+  ],
+  [
+   52.202,
+   "click"
+  ],
+  [
+   53.782,
+   "ding"
+  ],
+  [
+   57.316,
+   "click"
+  ],
+  [
+   61.637,
+   "click"
+  ],
+  [
+   65.099,
+   "ding"
+  ],
+  [
+   68.1,
+   "whoosh"
+  ],
+  [
+   70.39,
+   "whoosh"
+  ],
+  [
+   71.296,
+   "click"
+  ],
+  [
+   71.534,
+   "thud"
+  ],
+  [
+   76.188,
+   "whoosh"
+  ],
+  [
+   76.951,
+   "click"
+  ],
+  [
+   79.446,
+   "click"
+  ],
+  [
+   84.892,
+   "thud"
+  ],
+  [
+   85.008,
+   "whoosh"
+  ],
+  [
+   90.767,
+   "whoosh"
+  ],
+  [
+   91.544,
+   "click"
+  ],
+  [
+   92.419,
+   "ding"
+  ],
+  [
+   97.999,
+   "whoosh"
+  ],
+  [
+   98.838,
+   "click"
+  ],
+  [
+   100.282,
+   "ding"
+  ],
+  [
+   100.394,
+   "whoosh"
+  ],
+  [
+   102.576,
+   "click"
+  ],
+  [
+   104.324,
+   "ding"
+  ],
+  [
+   109.142,
+   "click"
+  ],
+  [
+   111.352,
+   "whoosh"
+  ],
+  [
+   112.429,
+   "pop"
+  ],
+  [
+   117.243,
+   "whoosh"
+  ],
+  [
+   118.002,
+   "click"
+  ],
+  [
+   119.423,
+   "whoosh"
+  ],
+  [
+   122.808,
+   "whoosh"
+  ],
+  [
+   127.586,
+   "click"
+  ],
+  [
+   128.917,
+   "pop"
+  ],
+  [
+   129.033,
+   "whoosh"
+  ],
+  [
+   132.465,
+   "whoosh"
+  ],
+  [
+   137.087,
+   "whoosh"
+  ]
+ ],
+ "labels": [
+  {
+   "text": "Exporter \u2192 Pool \u2192 Buyer",
+   "t": 7.382999923706055,
+   "secs": 4,
+   "id": "L000"
+  },
+  {
+   "text": "3 roles \u00b7 3 wallets \u00b7 live",
+   "t": 12.569052965427598,
+   "secs": 4,
+   "id": "L001"
+  },
+  {
+   "text": "Email login \u00b7 Privy",
+   "t": 20.28200005912781,
+   "secs": 3.2,
+   "id": "L002"
+  },
+  {
+   "text": "Fresh wallet \u00b7 Tier 0 \u00b7 70%",
+   "t": 24.95399991989136,
+   "secs": 2.4,
+   "id": "L003"
+  },
+  {
+   "text": "SB 6674321 registered on-chain",
+   "t": 28.370599932670594,
+   "secs": 3.2,
+   "id": "L004"
+  },
+  {
+   "text": "Tier 1 \u2192 80% advance @ 12.5%",
+   "t": 33.69925997463227,
+   "secs": 3.4,
+   "id": "L005"
+  },
+  {
+   "text": "Offer: 39,000 AUSD",
+   "t": 38.95335636091721,
+   "secs": 3.0949036232518026,
+   "id": "L006"
+  },
+  {
+   "text": "Deposit 100,000 \u2192 shares minted",
+   "t": 48.908160220298775,
+   "secs": 1.9220997638702428,
+   "id": "L007"
+  },
+  {
+   "text": "Buyer signs \u00b7 EIP-712",
+   "t": 51.507260029945385,
+   "secs": 3,
+   "id": "L008"
+  },
+  {
+   "text": "Advance sent \u00b7 confirmed in 3272 ms",
+   "t": 65.39886029735567,
+   "secs": 3.6,
+   "id": "L009"
+  },
+  {
+   "text": "FINANCED \u00b7 locked to the pool",
+   "t": 68.27961011901857,
+   "secs": 2.5295000076293945,
+   "id": "L010"
+  },
+  {
+   "text": "Double-financing blocked",
+   "t": 71.8341102220154,
+   "secs": 3,
+   "id": "L011"
+  },
+  {
+   "text": "One tx \u00b7 3 legs",
+   "t": 78.47111009422304,
+   "secs": 3.2,
+   "id": "L012"
+  },
+  {
+   "text": "Pool: principal + interest",
+   "t": 85.96646004062654,
+   "secs": 2.8,
+   "id": "L013"
+  },
+  {
+   "text": "Platform fee",
+   "t": 88.0777099643326,
+   "secs": 1.7,
+   "id": "L014"
+  },
+  {
+   "text": "Exporter keeps the rest",
+   "t": 89.2909598861313,
+   "secs": 1.9000000357627869,
+   "id": "L015"
+  },
+  {
+   "text": "Tier 2 \u2192 88% @ 11.5%",
+   "t": 92.72196005922319,
+   "secs": 3.2,
+   "id": "L016"
+  },
+  {
+   "text": "Payout history \u00b7 on-chain",
+   "t": 96.71865004757734,
+   "secs": 2,
+   "id": "L017"
+  },
+  {
+   "text": "Next offer: 42,900 AUSD",
+   "t": 100.58616755418203,
+   "secs": 1.604792367712065,
+   "id": "L018"
+  },
+  {
+   "text": "Share price \u2191 1.030778 \u2192 1.031914",
+   "t": 104.62705961805345,
+   "secs": 4.122519979019174,
+   "id": "L019"
+  },
+  {
+   "text": "Registered \u2192 Acknowledged \u2192 Financed \u2192 Paid",
+   "t": 112.72857959325793,
+   "secs": 4.6,
+   "id": "L020"
+  },
+  {
+   "text": "Short pay \u2192 PARTIAL \u00b7 Default \u2192 Tier 0",
+   "t": 119.60557979925159,
+   "secs": 4,
+   "id": "L021"
+  },
+  {
+   "text": "28 contract tests \u00b7 SWIFT path kept",
+   "t": 123.88010594694866,
+   "secs": 3.3674736501239693,
+   "id": "L022"
+  },
+  {
+   "text": "Each tx ~3.4 s on Monad",
+   "t": 129.22357942922594,
+   "secs": 3.2,
+   "id": "L023"
+  },
+  {
+   "text": "One asset: AUSD (mock on testnet)",
+   "t": 132.6493852190152,
+   "secs": 3.4,
+   "id": "L024"
+  }
+ ],
+ "beats": [
+  {
+   "id": "console",
+   "out0": 6.55,
+   "L": 11.52,
+   "off": 0.3,
+   "natural": 11.57,
+   "f": 0.99,
+   "freeze": 0
+  },
+  {
+   "id": "wallets",
+   "out0": 18.07,
+   "L": 5.98,
+   "off": 0.15,
+   "natural": 6.37,
+   "f": 0.8,
+   "freeze": 0
+  },
+  {
+   "id": "load",
+   "out0": 24.05,
+   "L": 9.64,
+   "off": 0.17,
+   "natural": 10.73,
+   "f": 0.83,
+   "freeze": 0
+  },
+  {
+   "id": "tier",
+   "out0": 33.69,
+   "L": 8.11,
+   "off": 0.15,
+   "natural": 8.16,
+   "f": 0.99,
+   "freeze": 0
+  },
+  {
+   "id": "lender",
+   "out0": 41.8,
+   "L": 8.78,
+   "off": 2.2,
+   "natural": 8.31,
+   "f": 1.35,
+   "freeze": 0.47
+  },
+  {
+   "id": "ack",
+   "out0": 50.58,
+   "L": 6.16,
+   "off": 0.55,
+   "natural": 5.33,
+   "f": 1.35,
+   "freeze": 0.83
+  },
+  {
+   "id": "accept",
+   "out0": 56.74,
+   "L": 13.82,
+   "off": 2.2,
+   "natural": 15.53,
+   "f": 0.75,
+   "freeze": 0
+  },
+  {
+   "id": "again",
+   "out0": 70.56,
+   "L": 5.8,
+   "off": 0.15,
+   "natural": 6.0,
+   "f": 0.96,
+   "freeze": 0
+  },
+  {
+   "id": "pay",
+   "out0": 76.36,
+   "L": 14.58,
+   "off": 2.2,
+   "natural": 16.48,
+   "f": 0.75,
+   "freeze": 0
+  },
+  {
+   "id": "tier2",
+   "out0": 90.94,
+   "L": 11.0,
+   "off": 0.15,
+   "natural": 11.2,
+   "f": 0.96,
+   "freeze": 0
+  },
+  {
+   "id": "share",
+   "out0": 101.94,
+   "L": 6.56,
+   "off": 1.85,
+   "natural": 5.19,
+   "f": 1.35,
+   "freeze": 1.37
+  },
+  {
+   "id": "explorer",
+   "out0": 108.5,
+   "L": 8.92,
+   "off": 2.2,
+   "natural": 7.96,
+   "f": 1.35,
+   "freeze": 0.96
+  },
+  {
+   "id": "edge",
+   "out0": 117.42,
+   "L": 9.58,
+   "off": 0.3,
+   "natural": 9.63,
+   "f": 0.99,
+   "freeze": 0
+  },
+  {
+   "id": "why",
+   "out0": 127.0,
+   "L": 9.47,
+   "off": 0.3,
+   "natural": 9.44,
+   "f": 1.0,
+   "freeze": 0.03
+  },
+  {
+   "id": "end",
+   "out0": 136.46,
+   "L": 5.69,
+   "off": 0.3,
+   "natural": 5.74,
+   "f": 0.99,
+   "freeze": 0
+  }
+ ]
+}

@@ -1,0 +1,17 @@
+import { chromium } from 'playwright';
+const [,, mode, W, Q, DSF] = process.argv;
+const b = await chromium.launch({ headless: true, channel: mode==='new'?'chromium':undefined, args: process.env.FLAGS?process.env.FLAGS.split(' '):[] });
+const ctx = await b.newContext({ viewport:{width:1920,height:1080}, deviceScaleFactor:+DSF });
+const p = await ctx.newPage();
+const cdp = await ctx.newCDPSession(p);
+let n=0, bytes=0, ts=[];
+cdp.on('Page.screencastFrame', async (f)=>{ n++; bytes+=f.data.length*0.75; ts.push(f.metadata.timestamp); await cdp.send('Page.screencastFrameAck',{sessionId:f.sessionId}).catch(()=>{}); });
+await p.goto('https://hisab-monad.vercel.app',{waitUntil:'networkidle'});
+await cdp.send('Page.startScreencast',{format:'jpeg',quality:+Q,maxWidth:+W,maxHeight:+W*9/16,everyNthFrame:1});
+await p.evaluate(()=>{const d=document.createElement('div');d.style.cssText='position:fixed;top:100px;left:0;width:40px;height:40px;background:red;z-index:99999';document.body.append(d);let x=0;(function f(){x=(x+9)%1800;d.style.left=x+'px';requestAnimationFrame(f)})()});
+const t0=Date.now();
+await new Promise(r=>setTimeout(r,3000));
+await cdp.send('Page.stopScreencast');
+const dt=(Date.now()-t0)/1000;
+console.log(mode,W,Q,DSF,'fps',(n/dt).toFixed(1),'KB/f',(bytes/n/1024).toFixed(0));
+await b.close();

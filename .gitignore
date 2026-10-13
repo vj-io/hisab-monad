@@ -28,3 +28,17 @@ demo/.narration-cache/
 demo/fail-*.png
 demo/timings.json
 demo/video-path.txt
+demo/anim/*.mp4
+demo/anim/frames/
+demo/anim/*.wav
+demo/anim/stills/
+
+demo/zoom/*.mp4
+demo/zoom/*.wav
+demo/zoom/frames/
+demo/zoom/raw/
+demo/zoom/raw_run3/
+demo/zoom/raw_prev_*/
+demo/zoom/ov/
+demo/anim/stills/
+demo/**/.narration-cache/

@@ -1,0 +1,68 @@
+[
+ {
+  "t": 0.0,
+  "end": 6.424,
+  "dur": 6.424,
+  "text": "An exporter ships goods today, then waits ninety days to get paid. Hisab on Monad pays them now, in dollars."
+ },
+ {
+  "t": 20.0,
+  "end": 33.327,
+  "dur": 13.327,
+  "text": "One click loads the invoice. A shipping bill for forty-eight thousand seven hundred fifty A U S D, and a credit tier. Tier one: eighty percent advance, twelve and a half percent A P R. So the offer is thirty-nine thousand."
+ },
+ {
+  "t": 40.0,
+  "end": 47.387,
+  "dur": 7.387,
+  "text": "Across the board, a lender picks an amount, mints test dollars, and deposits. They get pool shares, and the pool gets cash to lend."
+ },
+ {
+  "t": 60.0,
+  "end": 66.663,
+  "dur": 6.663,
+  "text": "The buyer acknowledges the invoice with one signature over the amount and the due date. No signature, no financing."
+ },
+ {
+  "t": 80.0,
+  "end": 92.671,
+  "dur": 12.671,
+  "text": "Now the exporter accepts. The receivable locks into the pool, and thirty-nine thousand lands in their wallet. One transaction, confirmed in about one point two seconds. That's Monad's fast blocks and tiny fees."
+ },
+ {
+  "t": 100.0,
+  "end": 104.527,
+  "dur": 4.527,
+  "text": "Try to finance the same invoice twice? Already locked. The contract just says no."
+ },
+ {
+  "t": 120.0,
+  "end": 130.255,
+  "dur": 10.255,
+  "text": "When the buyer pays, one transaction splits the money. The pool is repaid first, principal plus seventy-five days of interest. A small fee. And the rest goes to the exporter."
+ },
+ {
+  "t": 140.0,
+  "end": 149.4,
+  "dur": 9.4,
+  "text": "Paid on time, so the credit history improves. Tier two: eighty-eight percent advance, at a lower rate. The next invoice is offered at forty-two thousand nine hundred."
+ },
+ {
+  "t": 160.0,
+  "end": 163.797,
+  "dur": 3.797,
+  "text": "And the lender? Their share price ticks up. Real yield, from real trade."
+ },
+ {
+  "t": 180.0,
+  "end": 186.837,
+  "dur": 6.837,
+  "text": "Every step lands on the explorer. Registered, acknowledged, financed, paid, each one with its own transaction link."
+ },
+ {
+  "t": 200.0,
+  "end": 204.624,
+  "dur": 4.624,
+  "text": "That's Hisab on Monad. Try it live at hisab dash monad dot vercel dot app."
+ }
+]

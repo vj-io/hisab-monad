@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=JetBrains+Mono:wght@400;500;700&family=Patrick+Hand&display=block" rel="stylesheet">
+<style>
+  :root { --ink:#0a0a0a; --paper:#f0ede8; --muted:#6f6c66; --accent:#c8ff00; --red:#c4291c; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { width:1920px; height:1080px; overflow:hidden; background:var(--paper); color:var(--ink); }
+  #stage { position:absolute; inset:0; overflow:hidden; background:var(--paper); }
+  #cam { position:absolute; left:0; top:0; transform-origin:0 0; will-change:transform; }
+  #gridw { position:absolute; left:-300px; top:-300px; width:6800px; height:4100px;
+    background-image: linear-gradient(rgba(10,10,10,.07) 1.5px, transparent 1.5px), linear-gradient(90deg, rgba(10,10,10,.07) 1.5px, transparent 1.5px);
+    background-size: 60px 60px; background-position: 0 0; }
+  #grain { position:absolute; inset:0; opacity:.35; mix-blend-mode:multiply; pointer-events:none; z-index:50; }
+  .panel { position:absolute; width:1920px; height:1080px; }
+  .panel svg.ink { position:absolute; left:0; top:0; overflow:visible; }
+  .panel svg.ink path { fill:none; stroke:var(--ink); stroke-linecap:round; stroke-linejoin:round; }
+  .t { position:absolute; will-change:clip-path, transform, opacity; white-space:nowrap; }
+  .hand { font-family:'Patrick Hand', cursive; }
+  .disp { font-family:'Archivo', sans-serif; font-weight:800; letter-spacing:-.04em; line-height:.95; }
+  .body { font-family:'Archivo', sans-serif; font-weight:500; letter-spacing:-.01em; line-height:1.2; }
+  .mono { font-family:'JetBrains Mono', monospace; }
+  .btnl { display:flex; align-items:center; justify-content:center; font-family:'Archivo',sans-serif; font-weight:800; letter-spacing:-.02em; }
+  .chip { background:var(--ink); color:var(--paper); padding:8px 16px; border-radius:4px; font-family:'JetBrains Mono',monospace; font-weight:500; letter-spacing:.02em; }
+  .chip b { color:var(--accent); font-weight:700; }
+  .stamp { border:9px solid var(--ink); padding:4px 26px 8px; font-family:'Archivo',sans-serif; font-weight:800; letter-spacing:.03em; background:rgba(240,237,232,.55); mix-blend-mode:multiply; transform-origin:center; }
+  .coin { position:absolute; width:46px; height:46px; border-radius:50%; background:var(--accent); border:5px solid var(--ink); font:700 22px 'JetBrains Mono',monospace; display:flex; align-items:center; justify-content:center; will-change:transform; }
+  .handle { position:absolute; width:48px; height:48px; border-radius:50%; background:var(--accent); border:6px solid var(--ink); will-change:left; }
+  #cursor { position:absolute; left:0; top:0; width:60px; height:70px; z-index:30; pointer-events:none; overflow:visible; }
+  #pencil { position:absolute; left:0; top:0; width:100px; height:100px; z-index:29; pointer-events:none; overflow:visible; }
+  .ripple { position:absolute; width:90px; height:90px; margin:-45px 0 0 -45px; border:6px solid var(--ink); border-radius:50%; z-index:28; pointer-events:none; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="cam"><div id="gridw"></div></div>
+  <svg id="grain" width="1920" height="1080"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="3"/><feColorMatrix values="0 0 0 0 .5  0 0 0 0 .45  0 0 0 0 .4  0 0 0 .18 0"/></filter><rect width="1920" height="1080" filter="url(#n)"/></svg>
+  <svg width="0" height="0" style="position:absolute">
+    <filter id="boil" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence id="turb" type="fractalNoise" baseFrequency="0.018" numOctaves="2" seed="1"/>
+      <feDisplacementMap in="SourceGraphic" scale="4.5" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </svg>
+</div>
+<script src="tl.js"></script>
+<script>
+// ------------------------------------------------------------------ utils (lifted from the doodle engine)
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const seg = (t, a, b) => clamp((t - a) / (b - a));
+const eo = x => 1 - Math.pow(1 - x, 3);
+const eio = x => x < .5 ? 4*x*x*x : 1 - Math.pow(-2*x + 2, 3) / 2;
+const spring = x => x <= 0 ? 0 : 1 - Math.exp(-x * 8) * Math.cos(x * 20);
+let _s = 20261013; const rnd = () => (_s = (_s * 16807) % 2147483647) / 2147483647;
+const J = a => (rnd() - .5) * 2 * a;
+const f1 = v => v.toFixed(1);
+const P = (x, y) => `${f1(x)} ${f1(y)}`;
+const SFX = [];
+const LIME = '#c8ff00', INK = '#0a0a0a', RED = '#c4291c', CARD = '#f8f6f1';
+const fmt = (n, d = 2) => n.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+const lerp = (a, b, p) => a + (b - a) * p;
+
+function line(x1, y1, x2, y2, b = 5) {
+  const mx = (x1 + x2) / 2 + J(b), my = (y1 + y2) / 2 + J(b);
+  return `M${P(x1 + J(2), y1 + J(2))} Q${P(mx, my)} ${P(x2 + J(2), y2 + J(2))}`;
+}
+function rectP(x, y, w, h, o = 9) {
+  return [line(x - o*rnd(), y, x + w + o*rnd(), y), line(x + w, y - o*rnd(), x + w, y + h + o*rnd()),
+          line(x + w + o*rnd(), y + h, x - o*rnd(), y + h), line(x, y + h + o*rnd(), x, y - o*rnd())].join(' ');
+}
+function circleP(cx, cy, r, turn = 1.1, a0 = -2.2) {
+  const n = 56; let d = '';
+  for (let i = 0; i <= n; i++) {
+    const a = a0 + (i / n) * Math.PI * 2 * turn, rr = r * (1 + J(.025) + (i / n) * .05);
+    d += (i ? ' L' : 'M') + P(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr);
+  }
+  return d;
+}
+function arcP(cx, cy, r, a1, a2) {
+  let d = ''; const n = 24;
+  for (let i = 0; i <= n; i++) { const a = a1 + (a2 - a1) * i / n; d += (i ? ' L' : 'M') + P(cx + Math.cos(a) * r, cy + Math.sin(a) * r); }
+  return d;
+}
+function arrowP(x1, y1, x2, y2, bend = 40, head = 26) {
+  const mx = (x1 + x2) / 2, my = (y1 + y2) / 2, dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy);
+  const cx = mx - dy / L * bend, cy = my + dx / L * bend;
+  const a = Math.atan2(y2 - cy, x2 - cx);
+  return `M${P(x1, y1)} Q${P(cx, cy)} ${P(x2, y2)} M${P(x2 - Math.cos(a - .5) * head, y2 - Math.sin(a - .5) * head)} L${P(x2, y2)} L${P(x2 - Math.cos(a + .5) * head, y2 - Math.sin(a + .5) * head)}`;
+}
+const checkP = (x, y, s) => `M${P(x, y + s*.5)} L${P(x + s*.35, y + s*.88)} L${P(x + s, y)}`;
+const crossP = (x, y, s) => `${line(x, y, x + s, y + s, 3)} ${line(x + s, y, x, y + s, 3)}`;
+function sparkP(x, y, s) {
+  return [0, 1, 2, 3].map(k => { const a = k * Math.PI / 2 + .3; return line(x + Math.cos(a) * s * .35, y + Math.sin(a) * s * .35, x + Math.cos(a) * s, y + Math.sin(a) * s, 1); }).join(' ');
+}
+function squigP(x, y, w, amp = 26) { // a signature scrawl
+  let d = `M${P(x, y)}`; const n = 9;
+  for (let i = 1; i <= n; i++) d += ` Q${P(x + w * (i - .5) / n, y + (i % 2 ? -amp : amp) * (1 - i / (n + 3)) + J(6))} ${P(x + w * i / n, y + J(5))}`;
+  return d + ` L${P(x + w + 10, y + 12)}`;
+}
+const NS = 'http://www.w3.org/2000/svg';
+const svgEl = (n, a = {}) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); return e; };
+const press = x => x < 0 ? 0 : x < .1 ? x / .1 : Math.max(0, 1 - (x - .1) / .25);
+
+// ------------------------------------------------------------------ timeline from the voice
+const NT = []; { let t = 0.4; for (let i = 0; i < DUR.length; i++) { NT[i] = t; t += DUR[i] + 0.28; } }
+const END_T = NT[10] + DUR[10] + 2.4;
+const T = (i, ph, off = 0) => { const k = LINES[i].indexOf(ph); if (k < 0) throw new Error('phrase not found: ' + ph); return NT[i] + DUR[i] * (k / LINES[i].length) + off; };
+
+// ------------------------------------------------------------------ panels
+const cam = document.getElementById('cam');
+const panels = [], PEN = [], CUR = [], MOVES = [];
+class Panel {
+  constructor(px, py) {
+    Object.assign(this, { px, py, tracks: [], hooks: [] });
+    this.el = document.createElement('div'); this.el.className = 'panel';
+    this.el.style.left = px + 'px'; this.el.style.top = py + 'px';
+    this.svg = svgEl('svg', { class: 'ink', width: 1920, height: 1080 });
+    this.fills = svgEl('g'); this.g = svgEl('g', { filter: 'url(#boil)' });
+    this.svg.append(this.fills, this.g); this.el.append(this.svg); cam.append(this.el); panels.push(this);
+  }
+  path(d, at, dur = .5, o = {}) {
+    const p = svgEl('path', { d, pathLength: 1 });
+    p.style.strokeWidth = o.w || 5; if (o.color) p.style.stroke = o.color;
+    p.style.strokeDasharray = '1 1'; (o.parent || this.g).append(p);
+    this.tracks.push({ kind: 'draw', el: p, at, dur, out: o.out });
+    if (dur >= .35 && !o.quiet) SFX.push({ t: at, type: 'scribble', x: dur });
+    if (o.pen) PEN.push({ el: p, at, dur, pan: this });
+    return p;
+  }
+  block(x, y, w, h, at, o = {}) {
+    const r = svgEl('rect', { x, y, width: w, height: h, rx: o.rx ?? 4 });
+    r.style.fill = o.color || LIME; r.style.transformBox = 'fill-box'; r.style.transformOrigin = o.origin || 'left center';
+    (o.top ? this.g : this.fills).append(r);
+    this.tracks.push({ kind: o.kind || 'grow', el: r, at, dur: o.dur || .35, out: o.out });
+    return r;
+  }
+  text(x, y, html, cls, at, o = {}) {
+    const d = document.createElement('div'); d.className = 't ' + cls; d.innerHTML = html;
+    Object.assign(d.style, { left: x + 'px', top: y + 'px' }, o.style || {});
+    if (o.w) d.style.width = o.w + 'px';
+    if (o.h) d.style.height = o.h + 'px';
+    if (o.rot) d.dataset.rot = o.rot;
+    this.el.append(d);
+    const anim = o.anim || 'write';
+    const dur = o.dur || (anim === 'write' ? Math.max(.4, d.textContent.length * .028) : .4);
+    this.tracks.push({ kind: anim, el: d, at, dur, out: o.out });
+    if (anim === 'pop') SFX.push({ t: at, type: 'pop' });
+    if (anim === 'stamp') SFX.push({ t: at + .1, type: 'stamp' });
+    return d;
+  }
+  // text that changes with time. fn(t) -> html
+  live(x, y, cls, style, at, fn, o = {}) {
+    const d = this.text(x, y, '', cls, at, { anim: o.anim || 'fade', style, w: o.w, dur: .3, out: o.out });
+    this.hooks.push(t => { if (t >= at) d.innerHTML = fn(t); }); return d;
+  }
+  on(fn) { this.hooks.push(fn); }
+  card(x, y, w, h, at, o = {}) {
+    this.block(x, y, w, h, at, { color: CARD, kind: 'op', dur: .3, rx: 6 });
+    return this.path(rectP(x, y, w, h, 8), at, o.dur || .6, { w: 6, pen: o.pen });
+  }
+  button(x, y, w, h, label, at, o = {}) {
+    const kind = o.kind || 'primary', col = kind === 'danger' ? RED : INK;
+    const gb = svgEl('g'); this.g.append(gb);
+    const fill = svgEl('rect', { x, y, width: w, height: h, rx: 8 });
+    fill.style.fill = kind === 'primary' ? LIME : CARD; fill.style.stroke = 'none'; gb.append(fill);
+    this.tracks.push({ kind: 'op', el: fill, at: at + .2, dur: .25 });
+    this.path(rectP(x, y, w, h, 7), at, .45, { parent: gb, color: col, w: 6 });
+    const lab = this.text(x, y, label, 'btnl', at + .25, { anim: 'op', w, h, style: { fontSize: (o.fs || 38) + 'px', color: col } });
+    const cx = x + w / 2, cy = y + h / 2;
+    if (o.click != null) {
+      SFX.push({ t: o.click, type: 'click' });
+      this.hooks.push(u => { const d = press(u - o.click);
+        gb.setAttribute('transform', `translate(${cx} ${cy + 3*d}) scale(${1 - .05*d}) translate(${-cx} ${-cy})`);
+        lab.style.transform = `translateY(${3*d}px) scale(${1 - .05*d})`; });
+    }
+    return { x, y, w, h, cx, cy };
+  }
+  slider(x, y, w, at, t0, t1) {
+    this.path(line(x, y, x + w, y, 3), at, .4, { w: 7 });
+    const fl = this.block(x, y - 9, 1, 18, at + .2, { kind: 'op', dur: .1 });
+    const hd = document.createElement('div'); hd.className = 'handle'; this.el.append(hd);
+    this.tracks.push({ kind: 'popb', el: hd, at: at + .3, dur: .3, plain: 1 });
+    const v = t => eio(seg(t, t0, t1));
+    this.hooks.push(t => { if (t < at + .3) return; hd.style.left = (x + w * v(t) - 24) + 'px'; hd.style.top = (y - 24) + 'px'; fl.setAttribute('width', Math.max(1, w * v(t))); });
+    return v;
+  }
+  bar(x, y, w, h, at, t0, t1) {
+    this.path(rectP(x, y, w, h, 5), at, .4, { w: 5 });
+    const f = this.block(x + 4, y + 4, 1, h - 8, at + .2, { kind: 'op', dur: .1 });
+    this.hooks.push(t => f.setAttribute('width', Math.max(1, (w - 8) * eio(seg(t, t0, t1)))));
+    SFX.push({ t: t0, type: 'scribble', x: t1 - t0 });
+  }
+  stamp(x, y, txt, at, o = {}) {
+    return this.text(x, y, txt, 'stamp', at, { anim: 'stamp', rot: o.rot ?? -6, style: Object.assign({ fontSize: (o.fs || 76) + 'px', color: o.color || INK, borderColor: o.color || INK }, o.style || {}) });
+  }
+  checkBadge(cx, cy, r, at) {
+    this.block(cx - r, cy - r, 2 * r, 2 * r, at, { rx: r, kind: 'popb', origin: 'center' });
+    this.path(circleP(cx, cy, r, 1.05), at, .3, { w: 5, quiet: 1 });
+    this.path(checkP(cx - r * .45, cy - r * .35, r * .95), at + .12, .25, { w: 9, quiet: 1 });
+    SFX.push({ t: at + .1, type: 'success', x: 3 });
+  }
+  fly(html, p0, c, p1, t0, dur, o = {}) {
+    const d = document.createElement('div'); d.className = o.cls || 'coin'; d.innerHTML = html;
+    if (o.style) Object.assign(d.style, o.style); this.el.append(d);
+    this.hooks.push(t => {
+      const p = seg(t, t0, t0 + dur), e = eio(p), q = 1 - e;
+      const x = q*q*p0[0] + 2*q*e*c[0] + e*e*p1[0], y = q*q*p0[1] + 2*q*e*c[1] + e*e*p1[1];
+      const vis = t >= t0 && (o.stay || t <= t0 + dur + .05);
+      d.style.opacity = vis ? 1 : 0; d.style.left = x + 'px'; d.style.top = y + 'px';
+    });
+    return d;
+  }
+  update(u) {
+    for (const k of this.tracks) {
+      const p = seg(u, k.at, k.at + k.dur), s = k.el.style, rot = +(k.el.dataset.rot || 0);
+      const fo = k.out ? 1 - seg(u, k.out[0], k.out[1]) : 1;
+      switch (k.kind) {
+        case 'draw': s.strokeDashoffset = 1 - eo(p); s.opacity = (p > 0 ? 1 : 0) * fo; break;
+        case 'grow': s.transform = `scaleX(${eo(p)})`; s.opacity = fo; break;
+        case 'growY': s.transform = `scaleY(${eo(p)})`; s.opacity = fo; break;
+        case 'op': s.opacity = p * fo; break;
+        case 'write': s.clipPath = `inset(-30% ${f1((1 - p) * 100)}% -30% -2%)`; s.opacity = (p > 0 ? 1 : 0) * fo; s.transform = rot ? `rotate(${rot}deg)` : ''; break;
+        case 'fade': s.opacity = p * fo; s.transform = `translateY(${f1((1 - eo(p)) * 24)}px) rotate(${rot}deg)`; break;
+        case 'pop': { const x = u - k.at; const sc = x <= 0 ? 0 : spring(x * 1.1); s.opacity = (x > 0 ? 1 : 0) * fo; s.transform = `scale(${sc.toFixed(3)}) rotate(${rot}deg)`; break; }
+        case 'popb': { const x = u - k.at; const sc = x <= 0 ? 0 : spring(x * 1.1); s.transform = `scale(${sc.toFixed(3)})`; s.transformOrigin = 'center'; if (k.plain) s.opacity = x > 0 ? 1 : 0; else s.opacity = fo; break; }
+        case 'stamp': { const x = u - k.at; const q = clamp(x / .16); s.opacity = (x > 0 ? 1 : 0) * fo; s.transform = `scale(${(2.4 - 1.4 * eo(q)).toFixed(3)}) rotate(${rot}deg)`; break; }
+      }
+    }
+    for (const fn of this.hooks) fn(u);
+  }
+}
+
+// ------------------------------------------------------------------ board layout
+const PX = 2000, PY = 1150;
+const A = new Panel(0, 0), B = new Panel(PX, 0), C = new Panel(2 * PX, 0);
+const D = new Panel(2 * PX, PY), E = new Panel(PX, PY), F = new Panel(0, PY);
+const H = new Panel(0, 2 * PY), G = new Panel(PX, 2 * PY), N = new Panel(2 * PX, 2 * PY);
+const ctr = p => [p.px + 960, p.py + 540];
+function head(p, n, cap, at) {
+  p.path(circleP(170, 172, 40), at, .4, { w: 5 });
+  p.text(130, 144, n, 'mono', at + .2, { anim: 'pop', w: 80, style: { textAlign: 'center', fontSize: '44px', fontWeight: 700 } });
+  p.text(236, 140, cap, 'hand', at + .15, { style: { fontSize: '60px' } });
+}
+function arrow(from, to, a, b, tA, bend = 40) { // a,b in from/to local coords; world-drawn in from's svg
+  const bx = to.px + b[0] - from.px, by = to.py + b[1] - from.py;
+  from.path(arrowP(a[0], a[1], bx, by, bend, 30), tA, .7, { w: 7, pen: true });
+  CUR.push({ t: tA, x: from.px + a[0], y: from.py + a[1] });
+  CUR.push({ t: tA + .75, x: to.px + b[0], y: to.py + b[1] });
+}
+const cur = (p, t, x, y, click) => CUR.push({ t, x: p.px + x, y: p.py + y, click });
+function move(t0, t1, to, dip = 0) { MOVES.push({ t0, t1, to, dip }); }
+const hopTo = (i, to, s = 1) => move(NT[i] - .95, NT[i] + .2, [...ctr(to), s], .42);
+
+// ================================================================== 1 · EXPORTER (line 0 and 1)
+{
+  head(A, '1', 'exporter', .05);
+  A.card(130, 250, 520, 300, .2, { pen: true, dur: .9 });
+  A.text(160, 272, 'EXPORTER', 'disp', 1.1, { style: { fontSize: '42px' } });
+  A.text(160, 330, 'burner wallet', 'hand', 1.4, { style: { fontSize: '32px', color: '#3a3833' } });
+  A.text(160, 376, '0x7a3f…c21e', 'mono', 1.6, { style: { fontSize: '28px' } });
+  A.live(160, 422, 'mono', { fontSize: '30px', fontWeight: 700 }, 1.8, () => '0.00 AUSD');
+  A.button(160, 478, 340, 56, 'Use email wallet', 2.0, { kind: 'ghost', fs: 28 });
+  A.text(420, 262, '<span style="position:relative">on Monad<i style="position:absolute;left:-6px;right:-6px;bottom:2px;height:16px;background:#c8ff00;z-index:-1"></i></span>', 'hand', 2.6, { rot: -5, style: { fontSize: '42px', left: '440px', top: '268px' } });
+
+  // calendar doodle: the 90-day wait, crossed out for "now"
+  const c0 = T(0, 'waits ninety days'), c1 = T(0, 'to get paid'), c2 = T(0, 'pays them now');
+  const out = [NT[1] + 1.2, NT[1] + 1.8];
+  A.path(rectP(800, 330, 300, 250, 6), c0 - .2, .5, { w: 5, out });
+  A.path(line(800, 395, 1100, 395, 2), c0 + .2, .25, { w: 5, quiet: 1, out });
+  A.text(830, 430, '90 days', 'hand', c0 + .3, { style: { fontSize: '56px' }, out });
+  A.path(crossP(815, 345, 270).replace(/M/, 'M'), c1 + .1, .45, { w: 9, color: RED, out });
+  A.block(860, 640, 230, 30, c2, { out });
+  A.text(850, 590, 'now', 'hand', c2, { anim: 'pop', style: { fontSize: '110px' }, out });
+  A.path(sparkP(1130, 620, 44), c2 + .3, .3, { w: 5, quiet: 1, out });
+
+  // load demo invoice
+  const tLoad = T(0, 'Hisab on Monad', 0);
+  const click1 = NT[1] + .55;
+  A.button(130, 620, 520, 96, 'Load demo invoice', tLoad, { click: click1, fs: 38 });
+  cur(A, tLoad + .8, 1000, 880);
+  cur(A, NT[1] + .2, 470, 690);
+  cur(A, click1, 440, 676, true);
+  // loading bar
+  A.bar(130, 760, 520, 44, NT[1] + .3, NT[1] + .75, NT[1] + 2.3);
+  A.live(130, 818, 'mono', { fontSize: '28px', fontWeight: 700 }, NT[1] + .75, t => Math.round(100 * eio(seg(t, NT[1] + .75, NT[1] + 2.3))) + '%', { anim: 'op' });
+  A.checkBadge(695, 782, 26, NT[1] + 2.35);
+  // shipping bill
+  const tb = T(1, 'A shipping bill') - .35;
+  A.card(720, 250, 520, 440, tb);
+  A.text(750, 276, 'Shipping bill', 'hand', tb + .3, { style: { fontSize: '32px', color: '#3a3833' } });
+  A.text(750, 318, 'SB 6674321', 'disp', tb + .35, { anim: 'pop', style: { fontSize: '60px', transformOrigin: 'left center' } });
+  A.line1 = A.path(line(750, 400, 1210, 400, 3), tb + .6, .3, { w: 4, quiet: 1 });
+  A.text(750, 415, 'Amount', 'hand', tb + .7, { style: { fontSize: '32px', color: '#3a3833' } });
+  const ta = T(1, 'forty-eight');
+  A.block(745, 480, 440, 26, ta, { dur: .4 });
+  A.live(750, 452, 'mono', { fontSize: '38px', fontWeight: 700 }, ta - .1, t => fmt(48750 * eo(seg(t, ta, ta + 1.1))) + ' AUSD', { anim: 'op' });
+  SFX.push({ t: ta, type: 'count' });
+  A.text(750, 548, 'Buyer acknowledged', 'hand', tb + 1.0, { style: { fontSize: '32px', color: '#3a3833' } });
+  A.text(750, 594, 'No', 'mono', tb + 1.1, { style: { fontSize: '32px', fontWeight: 700 } });
+  cur(A, ta - .3, 700, 760); cur(A, ta + .5, 980, 475);
+  // tier card
+  const tt = T(1, 'a credit tier') - .1;
+  A.card(1310, 250, 480, 440, tt);
+  A.text(1340, 276, 'Credit tier', 'hand', tt + .3, { style: { fontSize: '32px', color: '#3a3833' } });
+  const t1 = T(1, 'Tier one');
+  A.path(circleP(1410, 400, 58), t1 - .1, .45, { w: 6, pen: true });
+  A.text(1350, 367, '1', 'mono', t1 + .25, { anim: 'pop', w: 120, style: { textAlign: 'center', fontSize: '68px', fontWeight: 700 } });
+  A.text(1490, 372, 'Tier 1 exporter', 'hand', t1 + .3, { style: { fontSize: '32px' } });
+  cur(A, t1 - .3, 1180, 560); cur(A, t1 + .3, 1470, 440);
+  const t80 = T(1, 'eighty percent'), t125 = T(1, 'twelve and a half');
+  A.block(1335, 548, 150, 26, t80, { dur: .3 });
+  A.live(1340, 500, 'disp', { fontSize: '66px' }, t80 - .1, t => Math.round(80 * eo(seg(t, t80, t80 + .6))) + '%', { anim: 'op' });
+  A.text(1500, 530, 'advance', 'hand', t80 + .1, { style: { fontSize: '34px' } });
+  A.live(1340, 612, 'mono', { fontSize: '34px', fontWeight: 700 }, t125 - .1, t => (12.5 * eo(seg(t, t125, t125 + .7))).toFixed(1) + '% APR', { anim: 'op' });
+  // offer
+  const to = T(1, 'So the offer') - .3;
+  A.card(720, 740, 1070, 210, to);
+  A.text(750, 758, 'Advance offer', 'hand', to + .3, { style: { fontSize: '32px', color: '#3a3833' } });
+  const t39 = T(1, 'thirty-nine thousand') - .35;
+  A.block(745, 856, 640, 30, t39 + .8, { dur: .4 });
+  A.live(750, 804, 'disp', { fontSize: '88px' }, t39 - .15, t => fmt(39000 * eo(seg(t, t39, t39 + .8))) + ' AUSD', { anim: 'op' });
+  SFX.push({ t: t39, type: 'count' });
+  A.text(1440, 790, '80% of 48,750.00', 'mono', t39 + .7, { anim: 'fade', style: { fontSize: '24px' } });
+  A.text(1440, 828, 'at 12.5% APR', 'mono', t39 + .8, { anim: 'fade', style: { fontSize: '24px' } });
+  cur(A, t39 - .4, 1150, 880); cur(A, t39 + .6, 1300, 870);
+}
+
+// ================================================================== 2 · LENDER
+{
+  head(B, '2', 'lender', 0);
+  B.card(130, 250, 800, 200, NT[2] - .8 + .1);
+  const b0 = NT[2] - .7;
+  B.text(160, 272, 'LENDER', 'disp', b0 + .3, { style: { fontSize: '42px' } });
+  B.text(160, 330, 'burner wallet', 'hand', b0 + .4, { style: { fontSize: '32px', color: '#3a3833' } });
+  B.text(160, 376, '0x91c2…e07a', 'mono', b0 + .5, { style: { fontSize: '28px' } });
+  const tMint = T(2, 'mints') + .15, tDep = T(2, 'deposits') + .05, tDrag0 = T(2, 'picks'), tDrag1 = T(2, 'mints') - .15;
+  B.live(520, 332, 'mono', { fontSize: '38px', fontWeight: 700 }, b0 + .6,
+    t => fmt(100000 * eo(seg(t, tMint, tMint + .8)) * (1 - eio(seg(t, tDep, tDep + .6)))) + ' AUSD', { anim: 'op' });
+  // deposit card
+  B.card(130, 490, 800, 460, b0 + .2);
+  B.text(160, 510, 'Amount (AUSD)', 'hand', b0 + .5, { style: { fontSize: '32px', color: '#3a3833' } });
+  B.path(rectP(160, 560, 740, 84, 6), b0 + .6, .4, { w: 5 });
+  const v = B.slider(180, 705, 700, b0 + .8, tDrag0, tDrag1);
+  B.live(185, 576, 'mono', { fontSize: '46px', fontWeight: 700 }, b0 + .9, t => fmt(100000 * v(t)), { anim: 'op' });
+  B.text(160, 735, '0', 'mono', b0 + 1, { anim: 'fade', style: { fontSize: '24px', color: '#6f6c66' } });
+  B.text(768, 735, '100,000', 'mono', b0 + 1, { anim: 'fade', style: { fontSize: '24px', color: '#6f6c66' } });
+  B.button(160, 800, 360, 96, 'Mint test AUSD', b0 + 1.0, { kind: 'ghost', fs: 32, click: tMint });
+  B.button(550, 800, 350, 96, 'Deposit', b0 + 1.1, { click: tDep });
+  // pool card
+  B.card(1000, 250, 790, 700, b0 + .3);
+  B.text(1030, 272, 'Pool', 'disp', b0 + .8, { style: { fontSize: '42px' } });
+  B.text(1030, 350, 'Total assets', 'hand', b0 + 1, { style: { fontSize: '32px', color: '#3a3833' } });
+  B.live(1030, 392, 'mono', { fontSize: '40px', fontWeight: 700 }, b0 + 1.1, t => fmt(100000 * eo(seg(t, tDep + .35, tDep + 1.2))) + ' AUSD', { anim: 'op' });
+  B.text(1030, 480, 'Share price', 'hand', b0 + 1.1, { style: { fontSize: '32px', color: '#3a3833' } });
+  const tShares = T(2, 'They get pool shares');
+  B.block(1025, 568, 220, 28, tShares + .2, { dur: .35 });
+  B.text(1030, 522, '1.0000 <span style="font-size:28px;font-family:JetBrains Mono">AUSD</span>', 'disp', b0 + 1.2, { anim: 'op', style: { fontSize: '70px' } });
+  B.text(1030, 625, 'Your shares', 'hand', b0 + 1.2, { style: { fontSize: '32px', color: '#3a3833' } });
+  B.live(1030, 667, 'mono', { fontSize: '40px', fontWeight: 700 }, b0 + 1.3, t => fmt(100000 * eo(seg(t, tDep + .75, tDep + 1.5))) + ' hPOOL', { anim: 'op' });
+  B.fly('<span style="font-size:15px">sh</span>', [700, 830], [1000, 760], [1060, 720], tDep + .1, .75);
+  B.fly('<span style="font-size:15px">sh</span>', [700, 830], [1000, 780], [1160, 700], tDep + .25, .75);
+  B.fly('<span style="font-size:15px">sh</span>', [700, 830], [1000, 800], [1260, 690], tDep + .4, .75);
+  const tLend = T(2, 'cash to lend');
+  B.path(rectP(1030, 780, 720, 48, 4), tLend - .3, .35, { w: 5 });
+  B.text(1030, 850, 'Idle 100,000.00 AUSD', 'mono', tLend, { style: { fontSize: '26px' } });
+  // cursor: from the arrow into the slider, drag, click mint, click deposit
+  cur(B, NT[2] - .1, 150, 780);
+  cur(B, tDrag0 - .15, 180, 705);
+  cur(B, tDrag1, 880, 705);
+  cur(B, tMint - .12, 340, 850); cur(B, tMint, 340, 850, true);
+  cur(B, tDep - .12, 720, 850); cur(B, tDep, 720, 850, true);
+  cur(B, tDep + 1.3, 1380, 440);
+}
+
+// ================================================================== 3 · BUYER
+{
+  head(C, '3', 'buyer', 0);
+  const c0 = NT[3] - .8;
+  C.card(130, 250, 520, 200, c0 + .1);
+  C.text(160, 272, 'BUYER', 'disp', c0 + .3, { style: { fontSize: '42px' } });
+  C.text(160, 330, 'burner wallet', 'hand', c0 + .4, { style: { fontSize: '32px', color: '#3a3833' } });
+  C.text(160, 376, '0x3d90…b5f1', 'mono', c0 + .5, { style: { fontSize: '28px' } });
+  // pay page
+  C.card(720, 250, 1070, 700, c0 + .2);
+  C.text(750, 272, 'Pay page', 'disp', c0 + .5, { style: { fontSize: '42px' } });
+  C.text(750, 360, 'Shipping bill', 'hand', c0 + .6, { style: { fontSize: '32px', color: '#3a3833' } });
+  C.text(1150, 345, 'SB 6674321', 'disp', c0 + .6, { style: { fontSize: '52px' } });
+  C.text(750, 460, 'Amount due', 'hand', c0 + .7, { style: { fontSize: '32px', color: '#3a3833' } });
+  C.block(1145, 505, 420, 26, c0 + 1.0, { dur: .3 });
+  C.text(1150, 445, '48,750.00 <span style="font-size:28px;font-family:JetBrains Mono">AUSD</span>', 'disp', c0 + .75, { style: { fontSize: '56px' } });
+  C.text(750, 575, 'Due date', 'hand', c0 + .8, { style: { fontSize: '32px', color: '#3a3833' } });
+  const tClick = T(3, 'with one signature') - .35, tSig = T(3, 'with one signature') + .1;
+  C.text(1150, 572, 'pending', 'mono', c0 + .9, { anim: 'fade', style: { fontSize: '34px', fontWeight: 700, color: '#6f6c66' }, out: [tSig + 1.0, tSig + 1.3] });
+  C.text(1150, 572, '+30 days', 'mono', tSig + 1.2, { anim: 'pop', style: { fontSize: '34px', fontWeight: 700 } });
+  C.button(760, 700, 540, 110, 'Acknowledge', c0 + .9, { click: tClick, fs: 42 });
+  // EIP-712 signature box
+  C.card(130, 490, 520, 460, c0 + .4);
+  C.text(160, 512, 'EIP-712', 'mono', c0 + .8, { style: { fontSize: '30px', fontWeight: 700, letterSpacing: '.12em' } });
+  const tAm = T(3, 'the amount'), tDue = T(3, 'the due date');
+  C.text(160, 580, '<b>amount</b>', 'chip', tAm - .2, { anim: 'pop', style: { fontSize: '26px', transformOrigin: 'left center' } });
+  C.text(160, 650, '<b>due date</b>', 'chip', tDue - .2, { anim: 'pop', style: { fontSize: '26px', transformOrigin: 'left center' } });
+  C.path(line(160, 860, 560, 860, 2), c0 + 1, .4, { w: 5 });
+  const sig = C.path(squigP(180, 815, 330, 34), tSig, 1.2, { w: 7, pen: true });
+  const tOk = T(3, 'No signature');
+  C.checkBadge(585, 830, 32, tOk - .2);
+  cur(C, NT[3] - .1, 150, 360);
+  cur(C, tClick - .5, 1010, 720);
+  cur(C, tClick, 1030, 756, true);
+  cur(C, tSig + 1.3, 330, 770);
+  cur(C, tOk + 1.2, 1050, 870);
+}
+
+// ================================================================== 4 · ACCEPT, 5 · ALREADY LOCKED
+{
+  head(D, '4', 'accept', 0);
+  const d0 = NT[4] - .8;
+  const tAcc = T(4, 'accepts') + .1, tLock = T(4, 'locks') + .05, tCoin = T(4, 'lands in') - .2, tConf = T(4, 'confirmed in');
+  // offer card
+  D.card(130, 250, 620, 520, d0 + .1);
+  D.text(160, 272, 'Advance offer', 'hand', d0 + .3, { style: { fontSize: '32px', color: '#3a3833' }, out: [tLock + .5, tLock + .8] });
+  D.text(160, 272, 'Financed advance', 'hand', tLock + .7, { anim: 'op', style: { fontSize: '32px', color: '#3a3833' } });
+  D.block(155, 334, 440, 28, d0 + .6, { dur: .3 });
+  D.text(160, 300, '39,000.00', 'disp', d0 + .5, { style: { fontSize: '84px' } });
+  D.text(160, 395, 'AUSD · 80% at 12.5% APR', 'mono', d0 + .7, { style: { fontSize: '26px' } });
+  D.card(160, 450, 340, 90, d0 + .6);   // receivable doc
+  D.text(180, 470, 'SB 6674321', 'disp', d0 + .8, { anim: 'op', style: { fontSize: '40px' } });
+  D.button(160, 580, 560, 84, 'Accept offer', d0 + .9, { click: tAcc, fs: 40 });
+  const tAgain = NT[5] + 1.1;
+  D.button(160, 685, 560, 70, 'Finance again', d0 + 1.0, { kind: 'danger', click: tAgain, fs: 34 });
+  // pool vault
+  D.path(rectP(830, 300, 440, 480, 8), d0 + .3, .6, { w: 7 });
+  D.text(860, 320, 'POOL', 'disp', d0 + .8, { style: { fontSize: '48px' } });
+  D.block(840, 650, 420, 120, tLock + .1, { kind: 'op', dur: .3, color: '#e7e3d8' });
+  // padlock
+  const lx = 1050, ly = 560;
+  D.path(rectP(lx - 70, ly, 140, 110, 4), d0 + 1.2, .5, { w: 7 });
+  const lbody = D.block(lx - 66, ly + 4, 132, 102, tLock + .05, { kind: 'op', dur: .1, top: 1 });
+  const sh = svgEl('g'); D.g.append(sh);
+  D.path(arcP(lx, ly - 4, 46, Math.PI, 2 * Math.PI) + ` L${P(lx + 46, ly + 34)}`, d0 + 1.4, .45, { w: 8, parent: sh });
+  D.on(t => sh.setAttribute('transform', `translate(0 ${-42 * (1 - eo(seg(t, tLock + .15, tLock + .4)))})`));
+  SFX.push({ t: tLock + .35, type: 'lock' });
+  D.path(line(lx, ly + 40, lx, ly + 72, 1), tLock + .4, .15, { w: 9, quiet: 1 });
+  // receivable flies into the pool
+  D.fly('<span style="font-size:20px">SB</span>', [440, 460], [700, 380], [1050, 410], tLock - .5, .8, { cls: 'coin', style: { width: '90px', height: '56px', borderRadius: '8px', background: '#f8f6f1', fontSize: '22px' } });
+  // exporter wallet
+  D.card(1350, 250, 440, 360, d0 + .2);
+  D.text(1380, 272, 'EXPORTER', 'disp', d0 + .6, { style: { fontSize: '42px' } });
+  D.text(1380, 335, 'Your AUSD', 'hand', d0 + .7, { style: { fontSize: '32px', color: '#3a3833' } });
+  D.block(1375, 442, 390, 28, tCoin + .3, { dur: .35 });
+  D.live(1380, 410, 'mono', { fontSize: '44px', fontWeight: 700 }, d0 + .8, t => fmt(39000 * eo(seg(t, tCoin + .35, tCoin + 1.5))), { anim: 'op' });
+  D.text(1380, 520, 'AUSD', 'mono', d0 + .9, { style: { fontSize: '28px', color: '#6f6c66' } });
+  for (let k = 0; k < 6; k++) D.fly('$', [1160, 560], [1280, 330 + (k % 3) * 40], [1500, 520], tCoin + k * .13, .75);
+  D.path(arrowP(1280, 520, 1370, 520, -20, 22), tCoin - .15, .3, { w: 6, quiet: 1 });
+  // confirmed chip
+  D.text(1350, 660, '<b>confirmed</b> in ~1.2 s', 'chip', tConf, { anim: 'pop', style: { fontSize: '28px', transformOrigin: 'left center' } });
+  const tBlk = T(4, 'fast blocks');
+  D.text(1350, 745, '~400 ms blocks', 'mono', tBlk - .2, { anim: 'fade', style: { fontSize: '26px', fontWeight: 700 } });
+  for (let k = 0; k < 5; k++) D.path(rectP(1350 + k * 72, 800, 56, 56, 3), tBlk + k * .3, .25, { w: 5, quiet: 1 });
+  const bls = [0, 1, 2, 3, 4].map(k => D.block(1355 + k * 72, 805, 46, 46, tBlk + .05, { kind: 'op', dur: .1 }));
+  D.on(t => { const k = Math.floor((t - tBlk - .05) / .4) % 5; bls.forEach((b, i) => { if (t > tBlk) b.style.opacity = (i === k ? 1 : 0); }); });
+  // stopwatch ring
+  // cursor
+  cur(D, NT[4] - .1, 440, 250);
+  cur(D, tAcc - .5, 420, 600);
+  cur(D, tAcc, 440, 622, true);
+  cur(D, tCoin + 1.2, 1300, 480);
+  cur(D, tBlk, 1600, 780);
+  cur(D, tAgain - .5, 450, 730); cur(D, tAgain, 440, 722, true);
+  // 5 · stamp
+  const tSt = T(5, 'Already locked') - .1;
+  D.stamp(150, 800, 'ALREADY_LOCKED', tSt, { color: RED, rot: -5, fs: 66 });
+  D.on(t => { const x = t - tSt; sh.setAttribute('transform', `translate(${(x > 0 && x < .5 ? Math.sin(x * 60) * 5 * (1 - x * 2) : 0)} 0)`); });
+  cur(D, tSt + .5, 700, 800);
+}
+
+// ================================================================== 6 · PAY SPLIT (mirrored: entry from the right)
+{
+  head(E, '5', 'pay', 0);
+  const e0 = NT[6] - .8;
+  const tPay = NT[6] + .55, tPool = T(6, 'The pool'), tFee = T(6, 'A small fee'), tEx = T(6, 'the rest');
+  E.card(1150, 250, 640, 700, e0 + .1);
+  E.text(1180, 272, 'Buyer', 'disp', e0 + .4, { style: { fontSize: '42px' } });
+  E.text(1180, 340, 'Amount (AUSD)', 'hand', e0 + .5, { style: { fontSize: '32px', color: '#3a3833' } });
+  E.path(rectP(1180, 390, 580, 110, 6), e0 + .5, .4, { w: 5 });
+  E.text(1200, 412, '48,750.00', 'mono', e0 + .7, { style: { fontSize: '56px', fontWeight: 700 } });
+  E.button(1180, 560, 580, 100, 'Pay', e0 + .8, { click: tPay, fs: 46 });
+  // recipients
+  const boxes = [
+    { y: 250, name: 'pool', val: 40001.71, at: tPool, big: true, sub: 'principal + interest' },
+    { y: 480, name: 'fee', val: 26.24, at: tFee, sub: '' },
+    { y: 710, name: 'exporter', val: 8722.04, at: tEx, sub: '' }];
+  boxes.forEach((b, i) => {
+    E.card(130, b.y, 760, 200, b.at - .55);
+    E.text(160, b.y + 20, b.name, 'hand', b.at - .2, { style: { fontSize: '36px' } });
+    if (b.big) E.block(155, b.y + 112, 400, 28, b.at + .1, { dur: .4 });
+    E.live(160, b.y + 66, 'disp', { fontSize: '80px' }, b.at - .1, t => fmt(b.val * eo(seg(t, b.at, b.at + .9))), { anim: 'op' });
+    SFX.push({ t: b.at, type: 'count' });
+    if (b.sub) E.text(520, b.y + 30, b.sub, 'mono', b.at + .2, { anim: 'fade', style: { fontSize: '24px' } });
+    const ya = 450 + (i - 1) * 55;
+    E.path(arrowP(1150, ya, 905, b.y + 100, i === 0 ? 25 : i === 1 ? 0 : -25, 28), b.at - .55, .5, { w: 7 });
+    E.fly('$', [1100, ya - 20], [1000, (ya + b.y + 100) / 2 - 30], [920, b.y + 80], b.at - .35, .6);
+  });
+  const t75 = T(6, 'seventy-five');
+  E.block(615, 372, 190, 22, t75, { dur: .3 });
+  E.text(520, 290, '75 days', 'hand', t75, { anim: 'pop', rot: -3, style: { fontSize: '44px', transformOrigin: 'left center', left: '620px', top: '322px' } });
+  E.stamp(1190, 740, 'PAID', NT[6] + DUR[6] - 1.0, { rot: -7, fs: 150, style: { padding: '0 36px 10px' } });
+  cur(E, NT[6] - .1, 1780, 560);
+  cur(E, tPay - .4, 1470, 610);
+  cur(E, tPay, 1470, 612, true);
+  cur(E, tPool, 1060, 450);
+  cur(E, tEx + 1, 1000, 700);
+}
+
+// ================================================================== 7 · TIER 2 (mirrored)
+{
+  head(F, '6', 'tier 2', 0);
+  const f0 = NT[7] - .8;
+  const tImp = T(7, 'improves'), tNew = T(7, 'Tier two'), tReg = T(7, 'The next invoice') - .1, tOff = T(7, 'forty-two');
+  F.card(1060, 250, 730, 520, f0 + .1);
+  F.text(1090, 272, 'Credit tier', 'hand', f0 + .3, { style: { fontSize: '32px', color: '#3a3833' } });
+  F.path(circleP(1210, 430, 70), f0 + .3, .5, { w: 6, out: [tNew - .1, tNew + .25] });
+  F.text(1130, 385, '1', 'mono', f0 + .5, { anim: 'pop', w: 160, style: { textAlign: 'center', fontSize: '84px', fontWeight: 700 }, out: [tNew - .1, tNew + .25] });
+  F.path(crossP(1170, 395, 80), tImp - .3, .3, { w: 8, color: RED, out: [tNew - .1, tNew + .25] });
+  F.block(1140, 360, 140, 140, tNew + .1, { rx: 70, kind: 'popb', origin: 'center', color: LIME });
+  F.path(circleP(1210, 430, 76), tNew + .1, .5, { w: 7, pen: true });
+  F.text(1130, 385, '2', 'mono', tNew + .35, { anim: 'pop', w: 160, style: { textAlign: 'center', fontSize: '90px', fontWeight: 700 } });
+  SFX.push({ t: tNew + .3, type: 'success', x: 5 });
+  F.text(1330, 395, 'Tier 2 exporter', 'hand', tNew + .4, { style: { fontSize: '32px' } });
+  const t88 = T(7, 'eighty-eight'), tLow = T(7, 'lower rate');
+  F.block(1085, 568, 160, 26, t88, { dur: .3 });
+  F.live(1090, 522, 'disp', { fontSize: '70px' }, f0 + .8, t => Math.round(lerp(80, 88, eo(seg(t, t88, t88 + .6)))) + '%', { anim: 'op' });
+  F.text(1270, 550, 'advance', 'hand', f0 + .9, { style: { fontSize: '34px' } });
+  F.block(1085, 685, 160, 26, tLow, { dur: .3, kind: 'op' });
+  F.live(1090, 640, 'mono', { fontSize: '40px', fontWeight: 700 }, f0 + 1.0, t => lerp(12.5, 11.5, eo(seg(t, tLow, tLow + .6))).toFixed(1) + '% APR', { anim: 'op' });
+  F.path(arrowP(1620, 600, 1620, 545, 0, 22), t88 + .3, .3, { w: 7, quiet: 1 });
+  // register next invoice + new offer
+  F.button(130, 270, 800, 100, 'Register next invoice', f0 + .5, { click: tReg, fs: 44 });
+  F.card(130, 430, 800, 360, tReg + .1);
+  F.text(160, 452, 'Advance offer', 'hand', tReg + .35, { style: { fontSize: '32px', color: '#3a3833' } });
+  F.block(155, 565, 560, 30, tOff, { dur: .4 });
+  F.live(160, 515, 'disp', { fontSize: '90px' }, tReg + .4, t => fmt(42900 * eo(seg(t, tOff, tOff + 1.1))), { anim: 'op' });
+  SFX.push({ t: tOff, type: 'count' });
+  F.text(160, 640, 'AUSD', 'mono', tReg + .6, { style: { fontSize: '32px', fontWeight: 700 } });
+  F.text(160, 700, '88% of 48,750.00 at 11.5% APR', 'mono', tOff + .6, { anim: 'fade', style: { fontSize: '26px' } });
+  cur(F, NT[7] - .1, 1800, 575);
+  cur(F, tNew + .2, 1500, 700);
+  cur(F, tReg - .35, 560, 330);
+  cur(F, tReg, 540, 326, true);
+  cur(F, tOff + 1, 700, 600);
+}
+
+// ================================================================== 8 · SHARE PRICE
+{
+  head(H, '7', 'yield', 0);
+  const h0 = NT[8] - .8;
+  H.card(130, 250, 900, 700, h0 + .1);
+  H.text(160, 272, 'Pool', 'disp', h0 + .4, { style: { fontSize: '42px' } });
+  const tk0 = NT[8] + .35, tk1 = NT[8] + 1.8;
+  H.text(160, 350, 'Total assets', 'hand', h0 + .5, { style: { fontSize: '32px', color: '#3a3833' } });
+  H.live(160, 392, 'mono', { fontSize: '44px', fontWeight: 700 }, h0 + .6, t => fmt(lerp(100000, 101001.71, eo(seg(t, tk0, tk1)))) + ' AUSD', { anim: 'op' });
+  H.text(160, 500, 'Share price', 'hand', h0 + .6, { style: { fontSize: '32px', color: '#3a3833' } });
+  H.block(155, 608, 400, 30, tk0 + .3, { dur: .4 });
+  H.live(160, 530, 'disp', { fontSize: '120px' }, h0 + .7, t => lerp(1, 1.01, eo(seg(t, tk0, tk1))).toFixed(4), { anim: 'op' });
+  SFX.push({ t: tk0, type: 'count' });
+  H.text(590, 600, 'AUSD', 'mono', h0 + .8, { style: { fontSize: '30px', fontWeight: 700 } });
+  H.text(160, 740, 'Your position', 'hand', h0 + .8, { style: { fontSize: '32px', color: '#3a3833' } });
+  H.live(160, 782, 'mono', { fontSize: '44px', fontWeight: 700 }, h0 + .9, t => fmt(lerp(100000, 101001.71, eo(seg(t, tk0, tk1)))) + ' AUSD', { anim: 'op' });
+  // rising line chart
+  H.card(1100, 250, 690, 700, h0 + .3);
+  H.path(`M${P(1150, 880)} L${P(1150, 330)} M${P(1150, 880)} L${P(1740, 880)}`, h0 + .6, .5, { w: 6 });
+  H.path(`M${P(1170, 800)} Q${P(1300, 790)} ${P(1380, 760)} Q${P(1500, 710)} ${P(1580, 560)} Q${P(1640, 440)} ${P(1710, 370)}`, tk0 - .1, 1.6, { w: 9, pen: true });
+  H.block(1690, 350, 40, 40, tk1 - .2, { rx: 20, kind: 'popb', origin: 'center' });
+  H.path(arrowP(1520, 360, 1650, 360, -20, 24), tk1, .3, { w: 6, quiet: 1 });
+  cur(H, NT[8] - .1, 480, 100);
+  cur(H, tk0, 420, 560);
+  cur(H, tk1 + .4, 1600, 600);
+}
+
+// ================================================================== 9 · EXPLORER
+{
+  head(G, '8', 'explorer', 0);
+  const g0 = NT[9] - .8;
+  const steps = [['Registered', 'Registered', '0x4be1…a90c'], ['Acknowledged', 'acknowledged', '0x91d7…3e2f'], ['Financed', 'financed', '0xc02a…77b8'], ['Paid', 'paid', '0x58f3…d1e4']];
+  G.path(line(220, 330, 220, 860, 3), g0 + .3, 1.0, { w: 7, pen: true });
+  steps.forEach(([lab, ph, tx], i) => {
+    const ts = T(9, ph) - .25, y = 300 + i * 175;
+    G.path(circleP(220, y + 30, 36), ts, .3, { w: 6 });
+    G.checkBadge(220, y + 30, 28, ts + .25);
+    G.text(300, y - 5, lab, 'disp', ts + .1, { style: { fontSize: '66px' } });
+    G.text(300, y + 70, `<b>tx</b> ${tx}`, 'chip', ts + .4, { anim: 'pop', style: { fontSize: '24px', transformOrigin: 'left center' } });
+    cur(G, ts + .5, 560, y + 85);
+  });
+  CUR.push({ t: NT[9] - .1, x: G.px + 140, y: G.py + 600 });
+  G.card(1180, 300, 610, 520, g0 + .5);
+  G.text(1210, 322, 'Shipping bill', 'hand', g0 + .8, { style: { fontSize: '32px', color: '#3a3833' } });
+  G.text(1210, 366, 'SB 6674321', 'disp', g0 + .9, { style: { fontSize: '56px' } });
+  G.text(1210, 470, 'Amount', 'hand', g0 + 1, { style: { fontSize: '32px', color: '#3a3833' } });
+  G.text(1210, 512, '48,750.00 AUSD', 'mono', g0 + 1.1, { style: { fontSize: '36px', fontWeight: 700 } });
+  G.stamp(1230, 620, 'PAID', T(9, 'paid') + .3, { rot: -6, fs: 100 });
+}
+
+// ================================================================== 10 · THE URL NOTE
+{
+  const n0 = T(10, 'Try it live') - .4;
+  N.block(150, 570, 1250, 30, n0 + 1.2, { dur: .5 });
+  N.text(150, 420, 'hisab-monad.vercel.app', 'hand', n0, { dur: 1.3, style: { fontSize: '150px' } });
+  N.path(sparkP(1560, 410, 60), n0 + 1.4, .4, { w: 7 });
+  N.path(sparkP(130, 700, 42), n0 + 1.6, .3, { w: 6 });
+}
+
+// ------------------------------------------------------------------ the sketched arrows that connect the board
+{
+  const a = (from, to, p, q, i, bend) => arrow(from, to, p, q, NT[i] - 1.7, bend);
+  a(A, B, [1790, 840], [140, 740], 2, -60);
+  a(B, C, [1790, 600], [150, 380], 3, -50);
+  a(C, D, [400, 960], [430, 238], 4, 40);
+  a(D, E, [125, 760], [1800, 550], 6, 60);
+  a(E, F, [125, 575], [1800, 575], 7, -40);
+  a(F, H, [480, 800], [480, 238], 8, -40);
+  a(H, G, [1790, 640], [140, 600], 9, -50);
+  a(G, N, [1790, 600], [140, 520], 10, 40);
+}
+// ------------------------------------------------------------------ camera
+const START = { cx: 390, cy: 420, s: 1.5 };
+move(NT[0] + 3.3, NT[0] + 5.2, [...ctr(A), 1]);
+move(T(1, 'Tier one') - .5, T(1, 'Tier one') + .6, [A.px + 1330, A.py + 480, 1.3]);
+move(T(1, 'So the offer') - .35, T(1, 'So the offer') + .7, [A.px + 1100, A.py + 700, 1.12]);
+move(T(4, 'confirmed in') - .3, T(4, 'confirmed in') + 1.0, [D.px + 1250, D.py + 520, 1.2]);
+move(NT[5] - .1, NT[5] + 1.0, [...ctr(D), 1]);
+hopTo(2, B, 1); hopTo(3, C, 1); hopTo(4, D, 1); hopTo(6, E, 1); hopTo(7, F, 1); hopTo(8, H, 1); hopTo(9, G, 1);
+// push in on the action inside panels
+move(NT[2] + 5.4, NT[2] + 6.6, [PX + 930, 560, 1.06]);
+move(NT[10] + .1, NT[10] + 3.6, [2900, 1700, 0.31]);
+MOVES.sort((p, q) => p.t0 - q.t0);
+const drift = (st, dt) => { const k = 1 + .0045 * clamp(dt, 0, 9); return { cx: st.cx, cy: st.cy, s: st.s * (st.nodrift ? 1 : k) }; };
+function camAt(t) {
+  let st = { ...START }, tEnd = 0;
+  for (const m of MOVES) {
+    if (t < m.t0) return drift(st, t - tEnd);
+    const from = drift(st, m.t0 - tEnd);
+    if (t < m.t1) {
+      const p = eio(seg(t, m.t0, m.t1));
+      return { cx: lerp(from.cx, m.to[0], p), cy: lerp(from.cy, m.to[1], p), s: lerp(from.s, m.to[2], p) * (1 - (m.dip || 0) * Math.sin(Math.PI * p)) };
+    }
+    st = { cx: m.to[0], cy: m.to[1], s: m.to[2], nodrift: m.to[2] < .5 }; tEnd = m.t1;
+  }
+  return drift(st, t - tEnd);
+}
+
+// ------------------------------------------------------------------ cursor, pencil, ripples
+CUR.sort((a, b) => a.t - b.t);
+const cursor = svgEl('svg', { id: 'cursor', viewBox: '0 0 60 70' });
+cursor.innerHTML = '<path d="M3 3 L3 52 L16 40 L26 62 L36 57 L26 36 L44 36 Z" fill="#f8f6f1" stroke="#0a0a0a" stroke-width="5" stroke-linejoin="round"/>';
+cam.append(cursor);
+const pencil = svgEl('svg', { id: 'pencil', viewBox: '0 0 100 100' });
+pencil.innerHTML = '<path d="M4 96 L16 66 L70 12 L88 30 L34 84 Z" fill="#c8ff00" stroke="#0a0a0a" stroke-width="5" stroke-linejoin="round"/><path d="M16 66 L34 84" stroke="#0a0a0a" stroke-width="5"/><path d="M70 12 L88 30" stroke="#0a0a0a" stroke-width="9"/><path d="M4 96 L10 80 L20 90 Z" fill="#0a0a0a"/>';
+cam.append(pencil);
+const ripples = CUR.filter(c => c.click).map(c => { const r = document.createElement('div'); r.className = 'ripple'; r.style.left = c.x + 'px'; r.style.top = c.y + 'px'; cam.append(r); return { el: r, t: c.t }; });
+function curAt(t) {
+  if (!CUR.length || t < CUR[0].t - .4) return null;
+  let k = 0; while (k < CUR.length - 1 && CUR[k + 1].t <= t) k++;
+  const a = CUR[k], b = CUR[k + 1];
+  if (!b) return t > a.t + 6 ? null : { x: a.x, y: a.y };
+  const p = eio(seg(t, a.t, b.t));
+  const wob = Math.sin(t * 5) * 3;
+  return { x: lerp(a.x, b.x, p) + wob * (1 - p), y: lerp(a.y, b.y, p) + Math.cos(t * 4) * 3 * (1 - p) };
+}
+
+// ------------------------------------------------------------------ frame
+const turb = document.getElementById('turb');
+let lastSeed = -1;
+function render(t) {
+  const c = camAt(t);
+  cam.style.transform = `translate(${f1(960 - c.cx * c.s)}px, ${f1(540 - c.cy * c.s)}px) scale(${c.s.toFixed(4)})`;
+  const hw = 960 / c.s + 700, hh = 540 / c.s + 700;
+  for (const p of panels) {
+    const vis = p.px + 1920 > c.cx - hw && p.px < c.cx + hw && p.py + 1080 > c.cy - hh && p.py < c.cy + hh;
+    p.el.style.display = vis ? 'block' : 'none';
+    p.vis = vis;
+    if (vis) p.update(t);
+  }
+  const seed = 1 + (Math.floor(t * 10) % 6);
+  if (seed !== lastSeed) { turb.setAttribute('seed', seed); lastSeed = seed; }
+  const cp = curAt(t);
+  cursor.style.display = cp ? 'block' : 'none';
+  if (cp) cursor.style.transform = `translate(${f1(cp.x)}px, ${f1(cp.y)}px) scale(${Math.max(1, 1 / c.s * .8).toFixed(2)})`;
+  for (const r of ripples) { const x = t - r.t; r.el.style.opacity = x > 0 && x < .45 ? 1 - x / .45 : 0; r.el.style.transform = `scale(${(.3 + 1.4 * eo(clamp(x / .45))).toFixed(3)})`; }
+  // pencil: latest active pen stroke
+  let pen = null;
+  for (const e of PEN) if (t >= e.at - .02 && t <= e.at + e.dur + .15 && e.pan.vis && (!pen || e.at > pen.at)) pen = e;
+  if (pen) {
+    const L = pen.el.getTotalLength(), p = eo(seg(t, pen.at, pen.at + pen.dur));
+    const pt = pen.el.getPointAtLength(L * p);
+    pencil.style.display = 'block';
+    pencil.style.transform = `translate(${f1(pen.pan.px + pt.x - 4)}px, ${f1(pen.pan.py + pt.y - 96)}px) scale(${Math.max(1, 1 / c.s * .7).toFixed(2)})`;
+    pencil.style.transformOrigin = '4px 96px';
+  } else pencil.style.display = 'none';
+}
+window.render = render;
+window.DURATION = END_T;
+SFX.sort((a, b) => a.t - b.t);
+window.SFX = SFX;
+window.MARKS = NT;
+window.ready = document.fonts.ready.then(() => Promise.all(['400 40px "Patrick Hand"', '800 100px Archivo', '500 40px Archivo', '700 40px Archivo', '400 20px "JetBrains Mono"', '700 20px "JetBrains Mono"'].map(f => document.fonts.load(f))));
+</script>
+</body>
+</html>

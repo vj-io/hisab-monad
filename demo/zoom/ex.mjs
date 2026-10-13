@@ -1,0 +1,12 @@
+import { chromium } from 'playwright';
+const b = await chromium.launch();
+const ctx = await b.newContext({ viewport:{width:1920,height:1080}, deviceScaleFactor:1 });
+const p = await ctx.newPage();
+await p.goto('https://hisab-monad.vercel.app',{waitUntil:'networkidle'});
+await p.waitForTimeout(3000);
+console.log((await p.locator('body').innerText()).slice(0,1800));
+await p.screenshot({path:'ex1.png'});
+await p.getByRole('button',{name:'Exporter',exact:true}).click(); await p.waitForTimeout(2500);
+await p.screenshot({path:'ex2.png',fullPage:true});
+console.log(await p.evaluate(()=>[innerWidth,document.documentElement.scrollHeight]));
+await b.close();
