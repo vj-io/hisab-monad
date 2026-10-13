@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
+import { InkBox, InkLine } from '../monad/doodle/Sketch';
 
+/** Inked card: hand-drawn outline that draws itself, springs in, title in Archivo 800 over a drawn rule. */
 export function Panel({
   title,
   action,
@@ -14,14 +16,17 @@ export function Panel({
   children: ReactNode;
 }) {
   return (
-    <div className={`rounded-[var(--radius-ui)] border border-line ${raised ? 'bg-raised shadow-lift' : 'bg-surface'} ${className}`}>
+    <InkBox className={className} shadow={raised}>
       {(title || action) && (
-        <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-2.5">
-          {title && <h3 className="text-sm font-semibold text-text">{title}</h3>}
-          {action}
+        <div className="px-4 pt-3">
+          <div className="flex items-center justify-between gap-3">
+            {title && <h3 className="min-w-0 text-[17px] leading-tight text-text">{title}</h3>}
+            {action}
+          </div>
+          <InkLine stroke={2.5} thickness={10} delay={0.25} className="mt-1" />
         </div>
       )}
       <div className="p-4">{children}</div>
-    </div>
+    </InkBox>
   );
 }

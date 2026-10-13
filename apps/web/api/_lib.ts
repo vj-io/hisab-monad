@@ -1,4 +1,4 @@
-import { createPublicClient, createWalletClient, http, isAddress, type Address, type Hex } from 'viem';
+import { createPublicClient, createWalletClient, http, isAddress, type Address, type Hex, type TransactionReceipt } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import dep from '../src/monad/deployments.json' with { type: 'json' };
 
@@ -15,6 +15,31 @@ export function deployer() {
   if (!pk) throw new Error('DEPLOYER_PRIVATE_KEY not set');
   const account = privateKeyToAccount((pk.startsWith('0x') ? pk : `0x${pk}`) as Hex);
   return { account, wallet: createWalletClient({ account, chain, transport: http(rpc) }) };
+}
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const TRANSIENT = /nonce too low|nonce has already been used|replacement transaction underpriced|already known|underpriced|fetch failed|http request failed|timed out|timeout|rate limit|too many requests|429|502|503|504|econnreset|econnrefused|etimedout|socket hang up|network/i;
+const transient = (e: unknown) => {
+  const x = e as { message?: string; shortMessage?: string; details?: string };
+  return TRANSIENT.test(`${x.shortMessage ?? ''} ${x.details ?? ''} ${x.message ?? ''}`);
+};
+
+/** Send a deployer tx, retrying (max 3 attempts, small backoff) on nonce races and transient RPC errors,
+ *  then wait for the receipt (also retried, without re-sending). Throws unless the receipt status is success.
+ *  `send` is re-invoked per attempt so viem re-reads the pending nonce. */
+export async function sendTx(send: () => Promise<Hex>): Promise<{ hash: Hex; receipt: TransactionReceipt }> {
+  let hash: Hex | undefined;
+  for (let i = 0; !hash; i++) {
+    try { hash = await send(); }
+    catch (e) { if (i >= 2 || !transient(e)) throw e; await sleep(250 * (i + 1) + Math.random() * 250); }
+  }
+  for (let i = 0; ; i++) {
+    try {
+      const receipt = await publicClient.waitForTransactionReceipt({ hash, timeout: 30_000 });
+      if (receipt.status !== 'success') throw Object.assign(new Error(`transaction reverted (${hash})`), { status: 502 });
+      return { hash, receipt };
+    } catch (e) { if (i >= 2 || !transient(e)) throw e; await sleep(250 * (i + 1)); }
+  }
 }
 
 export function body(req: Req): Record<string, unknown> {

@@ -10,6 +10,7 @@ import { ExporterView } from './components/ExporterView';
 import { FinancierView } from './components/FinancierView';
 import { BankOpsView } from './components/BankOpsView';
 import { ExplorerView } from './components/ExplorerView';
+import { BoilFilter } from './monad/doodle';
 import { MonadApp, initialTab, type MonadTab } from './monad/MonadApp';
 import { useEvents } from './useEvents';
 import type { Org, DomainEventEnvelope } from './types';
@@ -80,7 +81,7 @@ function AppInner({ onMonad }: { onMonad: () => void }) {
       <button type="button" onClick={onMonad} className="fixed bottom-4 left-4 z-50 rounded-[var(--radius-ui)] border border-line bg-raised px-3 py-1.5 text-sm text-text shadow-lift">
         Back to Monad console
       </button>
-      <div className="min-h-screen bg-bg pb-24">
+      <div className="min-h-screen pb-24">
         <Header tab={tab} onTab={setTab} />
         <ControlBar />
         <main className="xl:pr-[288px]">
@@ -105,6 +106,7 @@ export default function App() {
   return (
     <MotionConfig reducedMotion="user">
       <ToastProvider>
+        <BoilFilter />
         <Root />
       </ToastProvider>
     </MotionConfig>

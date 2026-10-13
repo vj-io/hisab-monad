@@ -11,16 +11,10 @@ interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'chi
   children?: ReactNode;
 }
 
-const VARIANT_CLS: Record<Variant, string> = {
-  primary: 'bg-accent text-accent-ink border border-accent hover:brightness-95',
-  secondary: 'bg-surface text-text border border-line hover:border-line-strong',
-  ghost: 'bg-transparent text-muted border border-transparent hover:bg-sunken hover:text-text',
-  danger: 'bg-transparent text-danger border border-danger hover:bg-danger-soft',
-};
-
+// Doodle look lives in index.css (.d-btn*): ink border, hard offset shadow, lime for primary.
 const SIZE_CLS: Record<Size, string> = {
-  sm: 'h-7 px-2.5 text-xs gap-1.5',
-  md: 'h-9 px-3.5 text-sm gap-2',
+  sm: 'min-h-8 px-2.5 text-xs gap-1.5',
+  md: 'min-h-10 px-4 text-sm gap-2',
 };
 
 export function Button({
@@ -36,7 +30,7 @@ export function Button({
   return (
     <button
       disabled={disabled || loading}
-      className={`inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-[var(--radius-ui)] font-medium transition-colors active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60 ${VARIANT_CLS[variant]} ${SIZE_CLS[size]} ${className}`}
+      className={`d-btn d-btn-${variant} ${SIZE_CLS[size]} ${className}`}
       {...rest}
     >
       {loading ? (

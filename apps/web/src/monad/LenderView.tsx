@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import type { Abi } from 'viem';
 import { Panel } from '../ui/Panel';
 import { Stamp } from '../ui/Stamp';
 import { Empty } from '../ui/Empty';
+import { Highlight, InkBar, InkBox } from './doodle';
 import { Field } from '../ui/Field';
 import { RuleRow } from '../ui/RuleRow';
 import { C, exactAusd, fmtAusd, parseAusd, publicClient } from './chain';
@@ -12,7 +13,20 @@ import { knownSb, readInvoice, useRead } from './invoice';
 import { useWallets } from './wallets';
 import { deployed } from './chain';
 
-const inputCls = 'h-9 w-full rounded-[var(--radius-ui)] border border-line bg-sunken px-3 font-mono tabular text-sm text-text';
+const inputCls = 'h-10 w-full px-3 tabular text-sm';
+
+function Unit({ children }: { children: string }) {
+  return <span className="ml-1.5 font-mono text-xs font-medium text-muted">{children}</span>;
+}
+
+function Big({ label, children, delay, title }: { label: string; children: ReactNode; delay: number; title?: string }) {
+  return (
+    <InkBox className="px-4 py-3" delay={delay} shadow>
+      <div className="d-hand text-[18px] text-muted">{label}</div>
+      <div className="mt-0.5 break-words font-display text-[clamp(26px,4.2vw,38px)] leading-[1.1] tabular text-text" title={title}>{children}</div>
+    </InkBox>
+  );
+}
 
 export function LenderView() {
   const { slots, send } = useWallets();
@@ -43,19 +57,26 @@ export function LenderView() {
   return (
     <div className="mx-auto grid max-w-5xl gap-4 p-4 md:grid-cols-2">
       {!deployed && <div className="md:col-span-2"><NotDeployed /></div>}
-      <Panel title="Pool">
+      <div className="md:col-span-2">
         {s ? (
-          <div>
-            <RuleRow label="Total assets" value={<span className="font-mono tabular">{fmtAusd(s.total)} AUSD</span>} />
-            <RuleRow label="Idle" value={<span className="font-mono tabular">{fmtAusd(s.idle)} AUSD</span>} />
-            <RuleRow label="Outstanding principal" value={<span className="font-mono tabular">{fmtAusd(s.out)} AUSD</span>} />
-            <RuleRow label="Utilisation" value={<span className="font-mono tabular">{util.toFixed(2)}%</span>} />
-            <RuleRow label="Share price" value={<span className="font-mono tabular" title={exactAusd(s.price)}>{exactAusd(s.price)} AUSD</span>} />
-            <RuleRow label="Your shares" value={<span className="font-mono tabular">{fmtAusd(s.shares)} hPOOL</span>} />
-            <RuleRow label="Your position" value={<span className="font-mono tabular">{fmtAusd(s.mine)} AUSD</span>} />
+          <div className="grid gap-4">
+            <div className="grid gap-4 sm:grid-cols-3">
+              <Big label="Total assets" delay={0}>{fmtAusd(s.total)}<Unit>AUSD</Unit></Big>
+              <Big label="Share price" delay={0.1} title={exactAusd(s.price)}><Highlight>{exactAusd(s.price)}</Highlight><Unit>AUSD</Unit></Big>
+              <Big label="Your position" delay={0.2}>{fmtAusd(s.mine)}<Unit>AUSD</Unit></Big>
+            </div>
+            <InkBox className="px-4 py-3" delay={0.3}>
+              <div className="d-hand text-[17px] text-muted">Utilisation</div>
+              <InkBar value={util / 100} label={`${util.toFixed(2)}%`} className="mt-1" />
+              <div className="mt-2 grid gap-x-6 sm:grid-cols-3">
+                <RuleRow label="Idle" value={<span className="font-mono tabular">{fmtAusd(s.idle)} AUSD</span>} />
+                <RuleRow label="Outstanding principal" value={<span className="font-mono tabular">{fmtAusd(s.out)} AUSD</span>} />
+                <RuleRow label="Your shares" value={<span className="font-mono tabular">{fmtAusd(s.shares)} hPOOL</span>} />
+              </div>
+            </InkBox>
           </div>
-        ) : <Empty message="Pool figures appear once the contracts are deployed." />}
-      </Panel>
+        ) : <Panel title="Pool"><Empty message="Pool figures appear once the contracts are deployed." /></Panel>}
+      </div>
 
       <Panel title="Lender actions">
         <div className="flex flex-col gap-3">
@@ -75,13 +96,19 @@ export function LenderView() {
         </div>
       </Panel>
 
-      <div className="md:col-span-2">
+      <div>
         <Panel title="Funded invoices">
-          {funded && funded.length ? funded.map((i) => (
-            <RuleRow key={i.sbHash} label={<span className="font-mono text-xs">{i.sbHash.slice(0, 10)}…</span>} value={
-              <span className="flex items-center gap-3"><span className="font-mono tabular">{fmtAusd(i.pos.principal)} AUSD at {(i.pos.aprBps / 100).toFixed(2)}%</span><Stamp state={i.statusName} tone={i.statusName === 'DEFAULTED' ? 'danger' : undefined} /></span>
-            } />
-          )) : <Empty message="No funded invoices yet. Finance one from the Exporter tab." />}
+          {funded && funded.length ? (
+            <div className="grid gap-3">
+              {funded.map((i, n) => (
+                <InkBox key={i.sbHash} stroke={2.5} delay={0.1 * n} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-3 py-2.5">
+                  <span className="font-mono text-xs">{i.sbHash.slice(0, 10)}…</span>
+                  <span className="font-mono tabular text-sm">{fmtAusd(i.pos.principal)} AUSD <span className="text-muted">at</span> {(i.pos.aprBps / 100).toFixed(2)}%</span>
+                  <Stamp state={i.statusName} tone={i.statusName === 'DEFAULTED' ? 'danger' : undefined} />
+                </InkBox>
+              ))}
+            </div>
+          ) : <Empty message="No funded invoices yet. Finance one from the Exporter tab." />}
         </Panel>
       </div>
     </div>

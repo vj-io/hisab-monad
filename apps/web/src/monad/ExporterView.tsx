@@ -5,10 +5,10 @@ import { Stamp } from '../ui/Stamp';
 import { Empty } from '../ui/Empty';
 import { RuleRow } from '../ui/RuleRow';
 import { Button } from '../ui/Button';
-import { C, deployed, exactAusd, fmtAusd, fmtDate, publicClient, sbHashFor } from './chain';
+import { activeSb, C, deployed, exactAusd, fmtAusd, fmtDate, publicClient, sbHashFor, setActiveSb } from './chain';
 import { engineAbi } from './abi';
 import { ActionButton, ErrorBanner, NotDeployed, TxLink, useAction } from './bits';
-import { readCredit, readInvoice, rememberSb, useRead } from './invoice';
+import { knownSbNums, readCredit, readInvoice, rememberSb, rememberSbNum, useRead } from './invoice';
 import { ROLES, useWallets } from './wallets';
 
 const TIERS = ['Tier 0', 'Tier 1', 'Tier 2', 'Tier 3'];
@@ -23,13 +23,24 @@ export function payLink(h: Hex) {
   return `${location.origin}${location.pathname}#/pay/${h}`;
 }
 
+async function postJson(url: string, payload: unknown, label: string) {
+  const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) });
+  const j = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(`${label}: ${j.error ?? res.status}`);
+  return j as { sbHash?: Hex };
+}
+
 export function ExporterView() {
-  const { slots, send, refresh } = useWallets();
+  const { slots, send, refresh, freshBurners } = useWallets();
   const me = slots.exporter.address;
-  const sbHash = sbHashFor(me);
+  const [, bump] = useState(0);
+  const sbNum = activeSb(me);
+  const sbNums = knownSbNums(me);
+  const sbHash = sbHashFor(me, sbNum);
   const load = useAction();
   const fin = useAction();
   const again = useAction();
+  const next = useAction();
   const [loadMsg, setLoadMsg] = useState('');
   const [now, setNow] = useState(() => Math.floor(Date.now() / 1000));
   useEffect(() => { const id = setInterval(() => setNow(Math.floor(Date.now() / 1000)), 1000); return () => clearInterval(id); }, []);
@@ -46,16 +57,32 @@ export function ExporterView() {
   async function loadDemo() {
     setLoadMsg('');
     // sequential: the faucet and seed share one deployer nonce on the server
-    for (const r of ROLES) {
-      const res = await fetch('/api/faucet', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ address: slots[r].address }) });
-      if (!res.ok) throw new Error(`faucet (${r}): ${(await res.json().catch(() => ({}))).error ?? res.status}`);
-    }
-    const res = await fetch('/api/seed', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ exporter: me }) });
-    const j = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(`seed: ${j.error ?? res.status}`);
-    rememberSb(sbHash);
-    setLoadMsg(`Seeded ${j.sbHash ?? sbHash}`);
+    for (const r of ROLES) await postJson('/api/faucet', { address: slots[r].address }, `faucet (${r})`);
+    const j = await postJson('/api/seed', { exporter: me }, 'seed');
+    const h = sbHashFor(me, 6674321);
+    rememberSb(h);
+    rememberSbNum(me, 6674321);
+    setActiveSb(me, 6674321);
+    bump((x) => x + 1);
+    setLoadMsg(`Seeded ${j.sbHash ?? h}`);
     refresh();
+  }
+
+  /** PRD demo step 7: register the next shipping bill; the offer is then priced at the exporter's new tier. */
+  async function registerNext() {
+    const n = Math.max(...sbNums) + 1;
+    await postJson('/api/seed', { exporter: me, sb: n }, 'seed');
+    rememberSb(sbHashFor(me, n));
+    rememberSbNum(me, n);
+    setActiveSb(me, n);
+    bump((x) => x + 1);
+    refresh();
+  }
+
+  function freshDemo() {
+    freshBurners();
+    bump((x) => x + 1);
+    setLoadMsg('New demo wallets created. Load the demo invoice to fund and seed them.');
   }
 
   const doFinance = () => send('exporter', { address: C.engine, abi: engineAbi as Abi, functionName: 'finance', args: [sbHash] }).then((r) => { rememberSb(sbHash); return r; });
@@ -70,6 +97,7 @@ export function ExporterView() {
       {!deployed && <div className="md:col-span-2"><NotDeployed /></div>}
       <div className="flex flex-wrap items-center gap-3 md:col-span-2">
         <ActionButton label="Load demo invoice" busy={load.busy} onClick={() => load.run('Load demo invoice', loadDemo)} />
+        <Button variant="ghost" onClick={freshDemo}>Start fresh demo</Button>
         <span className="text-xs text-muted">Funds the three wallets with gas and registers SB 6674321 for this exporter (75 days backdated, 2 on-time invoices of history).</span>
         {loadMsg && <span className="font-mono text-xs text-accent-text">{loadMsg}</span>}
         {load.err && <ErrorBanner {...load.err} />}
@@ -78,7 +106,11 @@ export function ExporterView() {
       <Panel title="Invoice" action={inv ? <Stamp state={inv.statusName} tone={inv.statusName === 'DEFAULTED' ? 'danger' : undefined} /> : undefined}>
         {inv ? (
           <div>
-            <RuleRow label="Shipping bill" value={<span className="font-display font-semibold">SB 6674321</span>} />
+            <RuleRow label="Shipping bill" value={sbNums.length > 1 ? (
+              <select className="h-8 rounded-[var(--radius-ui)] border border-line bg-sunken px-2 font-display text-sm font-semibold text-text" value={sbNum} onChange={(e) => { setActiveSb(me, Number(e.target.value)); bump((x) => x + 1); refresh(); }}>
+                {sbNums.map((n) => <option key={n} value={n}>SB {n}</option>)}
+              </select>
+            ) : <span className="font-display font-semibold">SB {sbNum}</span>} />
             <RuleRow label="Amount" value={<span className="font-mono tabular">{fmtAusd(inv.amount)} AUSD</span>} />
             <RuleRow label="Due" value={<span className="font-mono tabular">{acked ? fmtDate(inv.ack.dueDate) : 'after buyer acknowledges'}</span>} />
             <RuleRow label="Buyer acknowledged" value={acked ? 'Yes' : 'No'} />
@@ -114,6 +146,13 @@ export function ExporterView() {
               <ActionButton label="Accept offer" busy={fin.busy} disabled={status !== 0 || !acked} onClick={() => fin.run('Accept offer', doFinance)} />
               <ActionButton label="Finance again" variant="danger" busy={again.busy} disabled={status === 0} onClick={() => again.run('Finance again', doFinance)} />
             </div>
+            {status >= 2 && (
+              <div className="flex flex-wrap items-center gap-3">
+                <ActionButton label="Register next invoice" busy={next.busy} onClick={() => next.run('Register next invoice', registerNext)} />
+                <span className="text-xs text-muted">The next invoice is offered at {credit.advanceBps / 100}% advance and {credit.aprBps / 100}% APR ({TIERS[credit.tier]}).</span>
+              </div>
+            )}
+            {next.err && <ErrorBanner {...next.err} />}
             {fin.err && <ErrorBanner {...fin.err} />}
             {again.err && <ErrorBanner {...again.err} />}
             {fin.tx && <div className="text-sm">Advance sent: <TxLink hash={fin.tx.hash} ms={fin.tx.ms} /></div>}

@@ -3,6 +3,7 @@ import { Panel } from '../ui/Panel';
 import { Stamp } from '../ui/Stamp';
 import { Empty } from '../ui/Empty';
 import { RuleRow } from '../ui/RuleRow';
+import { InkCheck, InkCircle, InkLine } from './doodle';
 import { C, GRACE, deployed, fmtAusd, fmtDate, publicClient, sbHashFor } from './chain';
 import { engineAbi } from './abi';
 import { ActionButton, ErrorBanner, NotDeployed, TxLink, useAction } from './bits';
@@ -24,7 +25,7 @@ async function timeline(i: Invoice) {
     { label: 'Financed', block: i.pos.financedBlock, address: C.engine },
     { label: i.pos.status === 4 ? 'Defaulted' : i.pos.status === 3 ? 'Paid (short)' : 'Paid', block: i.pos.settledBlock, address: C.engine },
   ];
-  return Promise.all(steps.filter((s) => s.block > 0n).map(async (s) => ({ ...s, hash: await findTx(s.address, s.block, i.sbHash).catch(() => undefined) })));
+  return Promise.all(steps.map(async (s) => ({ ...s, done: s.block > 0n, hash: s.block > 0n ? await findTx(s.address, s.block, i.sbHash).catch(() => undefined) : undefined })));
 }
 
 function InvoiceTimeline({ i }: { i: Invoice }) {
@@ -36,9 +37,28 @@ function InvoiceTimeline({ i }: { i: Invoice }) {
     <Panel title={<span className="font-display">SB 6674321 <span className="font-mono text-xs text-faint">{i.sbHash.slice(0, 10)}…</span></span>} action={<Stamp state={i.statusName} tone={i.statusName === 'DEFAULTED' ? 'danger' : undefined} />}>
       <RuleRow label="Amount" value={<span className="font-mono tabular">{fmtAusd(i.amount)} AUSD</span>} />
       {i.pos.shortfall > 0n && <RuleRow label="Shortfall" value={<span className="font-mono tabular text-danger">{fmtAusd(i.pos.shortfall)} AUSD</span>} />}
-      {steps?.map((s) => (
-        <RuleRow key={s.label} label={s.label} value={<span className="flex items-center gap-3"><span className="font-mono tabular text-xs text-muted">block {s.block.toString()}</span>{s.hash ? <TxLink hash={s.hash} /> : <span className="text-xs text-faint">tx not found</span>}</span>} />
-      ))}
+      {steps && (
+        <ol className="relative mt-3 grid gap-4 py-1">
+          <div className="absolute bottom-4 left-[17px] top-4 w-3 -translate-x-1/2" aria-hidden="true"><InkLine vertical stroke={3} thickness={12} delay={0.2} bend={3} /></div>
+          {steps.map((s, n) => (
+            <li key={s.label} className="relative flex items-start gap-3">
+              <span className="bg-raised py-0.5"><InkCircle size={36} stroke={3} dashed={!s.done} delay={0.3 + 0.15 * n} className="font-mono text-sm font-bold">{n + 1}</InkCircle></span>
+              <div className="min-w-0 flex-1 pt-0.5">
+                <div className="flex items-center gap-2">
+                  <span className={`font-display text-base ${s.done ? '' : 'text-muted'}`}>{s.label}</span>
+                  {s.done && <InkCheck size={22} delay={0.6 + 0.15 * n} />}
+                </div>
+                {s.done ? (
+                  <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+                    <span className="font-mono tabular text-xs text-muted">block {s.block.toString()}</span>
+                    {s.hash ? <TxLink hash={s.hash} /> : <span className="text-xs text-faint">tx not found</span>}
+                  </div>
+                ) : <span className="d-hand text-[16px] text-muted">not yet</span>}
+              </div>
+            </li>
+          ))}
+        </ol>
+      )}
       {i.pos.status === 1 && (
         <div className="flex flex-col gap-2 pt-3">
           <ActionButton label="Mark default" variant="danger" busy={dflt.busy} disabled={!overdue} onClick={() => dflt.run('Mark default', () => send('lender', { address: C.engine, abi: engineAbi as Abi, functionName: 'markDefault', args: [i.sbHash] }))} />

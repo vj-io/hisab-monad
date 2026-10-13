@@ -9,7 +9,7 @@ import type { TxResult } from './wallets';
 
 export function TxLink({ hash, ms }: { hash: string; ms?: number }) {
   return (
-    <a href={txUrl(hash)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-mono tabular text-xs text-accent-text underline">
+    <a href={txUrl(hash)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-mono tabular text-xs">
       {hash.slice(0, 10)}…{hash.slice(-6)} <ArrowSquareOut size={12} />
       {ms !== undefined && <span className="ml-1 text-muted no-underline">confirmed in {ms} ms</span>}
     </a>
@@ -18,7 +18,7 @@ export function TxLink({ hash, ms }: { hash: string; ms?: number }) {
 
 export function ErrorBanner({ text, name }: { text: string; name?: string }) {
   return (
-    <motion.div role="alert" animate={name ? { x: [0, -6, 6, -6, 6, 0] } : undefined} transition={{ duration: 0.3 }} className="rounded-[var(--radius-ui)] border border-danger bg-danger-soft px-3 py-2 text-sm text-danger">
+    <motion.div role="alert" animate={name ? { x: [0, -6, 6, -6, 6, 0] } : undefined} transition={{ duration: 0.3 }} className="rounded-[var(--radius-ui)] border-[2.5px] border-danger bg-danger-soft px-3 py-2 text-sm font-medium text-danger">
       {name ? <span className="font-mono font-semibold">{name}</span> : null}
       {name ? ': ' : ''}
       {name ? 'the contract refused this call.' : text}
@@ -51,5 +51,5 @@ export function ActionButton({ label, busy, onClick, variant = 'primary', disabl
 }
 
 export function NotDeployed() {
-  return <div className="rounded-[var(--radius-ui)] border border-dashed border-line-strong px-4 py-3 text-sm text-muted">Contracts are not deployed yet (deployments.json holds placeholder zero addresses). Reads and writes are disabled.</div>;
+  return <div className="d-hand rounded-[var(--radius-ui)] border-2 border-dashed border-line-strong px-4 py-3 text-[17px] text-muted">Contracts are not deployed yet (deployments.json holds placeholder zero addresses). Reads and writes are disabled.</div>;
 }

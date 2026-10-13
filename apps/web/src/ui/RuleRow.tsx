@@ -13,12 +13,12 @@ export function RuleRow({
 }) {
   return (
     <div
-      className={`${className.includes('grid') ? '' : 'flex justify-between'} items-center gap-3 border-b border-line py-2 text-sm last:border-b-0 ${className}`}
+      className={`${className.includes('grid') ? '' : 'flex justify-between'} items-center gap-3 border-b-2 border-dashed border-ink/25 py-2 text-sm last:border-b-0 ${className}`}
     >
       {children ?? (
         <>
-          <span className="text-muted">{label}</span>
-          <span className="text-text">{value}</span>
+          <span className="d-hand text-[17px] text-muted">{label}</span>
+          <span className="min-w-0 break-words text-right text-text">{value}</span>
         </>
       )}
     </div>

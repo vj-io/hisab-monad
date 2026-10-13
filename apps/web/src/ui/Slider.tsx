@@ -22,7 +22,7 @@ export function Slider({
         step={step}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="h-1 flex-1 cursor-pointer appearance-none rounded-full bg-line accent-accent"
+        className="h-1.5 flex-1 cursor-pointer appearance-none rounded-full bg-ink accent-ink"
       />
       <span className="w-16 shrink-0 text-right font-mono tabular text-xs text-text">{format ? format(value) : value}</span>
     </div>

@@ -5,6 +5,7 @@ interface TabItem<T extends string> {
   label: string;
 }
 
+/** Hand-written, wavy-underlined labels; the active one gets a highlighter swipe that slides between tabs. */
 export function Tabs<T extends string>({
   items,
   value,
@@ -17,24 +18,23 @@ export function Tabs<T extends string>({
   groupId: string;
 }) {
   return (
-    <div className="flex items-center gap-1 overflow-x-auto overflow-y-hidden [scrollbar-width:none]">
+    <div className="flex items-center gap-1 overflow-x-auto overflow-y-hidden px-1 [scrollbar-width:none]">
       {items.map((it) => (
         <button
           key={it.id}
           type="button"
           onClick={() => onChange(it.id)}
-          className={`relative whitespace-nowrap px-3 py-1.5 text-sm font-medium transition-colors active:translate-y-px ${
-            value === it.id ? 'text-text' : 'text-muted hover:text-text'
-          }`}
+          aria-current={value === it.id ? 'page' : undefined}
+          className="d-tab active:translate-y-px"
         >
-          {it.label}
           {value === it.id && (
             <motion.span
-              layoutId={`${groupId}-underline`}
-              className="absolute inset-x-2 -bottom-px h-0.5 bg-accent"
-              transition={{ type: 'spring', stiffness: 500, damping: 40 }}
+              layoutId={`${groupId}-swipe`}
+              className="d-tab-hl"
+              transition={{ type: 'spring', stiffness: 500, damping: 36 }}
             />
           )}
+          <span>{it.label}</span>
         </button>
       ))}
     </div>

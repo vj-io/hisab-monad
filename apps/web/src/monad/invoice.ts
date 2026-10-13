@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Address, Hex } from 'viem';
-import { C, deployed, publicClient, STATUS } from './chain';
+import { C, DEFAULT_SB, deployed, publicClient, STATUS } from './chain';
 import { creditAbi, engineAbi, registryAbi, tokenAbi } from './abi';
 import { useWallets } from './wallets';
 
@@ -51,17 +51,33 @@ export async function readCredit(exporter: Address) {
   return { tier: Number(tier), realised: x[0], onTime: x[1], shortPaid: x[2], defaults: x[3], volume: x[4], openExposure: x[5], advanceBps: Number(t[0]), aprBps: Number(t[1]), cap: t[2] };
 }
 
-/** Poll an async reader on every wallet tick. Returns undefined while loading, null on error/not deployed. */
+/** Poll an async reader on every wallet tick (5 s). One request in flight at a time, paused while the tab is hidden,
+ *  and an RPC error keeps the last good data. Returns undefined data while loading. */
 export function useRead<T>(fn: () => Promise<T>, deps: unknown[]): { data: T | undefined; error?: string } {
   const { tick } = useWallets();
   const [state, set] = useState<{ data: T | undefined; error?: string }>({ data: undefined });
-  useEffect(() => {
+  const fnRef = useRef(fn);
+  fnRef.current = fn;
+  const inflight = useRef(false);
+  const alive = useRef(true);
+  useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
+  const gen = useRef(0);
+  const fetchNow = () => {
     if (!deployed) { set({ data: undefined, error: 'Contracts not deployed yet' }); return; }
-    let live = true;
-    fn().then((d) => live && set({ data: d }), (e) => live && set((s) => ({ data: s.data, error: String(e?.shortMessage ?? e?.message ?? e) })));
-    return () => { live = false; };
+    const my = gen.current;
+    inflight.current = true;
+    fnRef.current().then(
+      (d) => { if (alive.current && my === gen.current) set({ data: d }); },
+      (e) => { if (alive.current && my === gen.current) set((s) => ({ data: s.data, error: String(e?.shortMessage ?? e?.message ?? e) })); },
+    ).finally(() => { inflight.current = false; });
+  };
+  // deps changed (different invoice / wallet): drop stale results and fetch right away
+  useEffect(() => { gen.current++; fetchNow(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, deps);
+  useEffect(() => {
+    if (inflight.current || document.hidden) return;
+    fetchNow();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tick, ...deps]);
+  }, [tick]);
   return state;
 }
 
@@ -73,4 +89,17 @@ export function rememberSb(h: Hex) {
   const l = knownSb();
   if (l.includes(h)) return;
   try { localStorage.setItem(KNOWN, JSON.stringify([...l, h])); } catch { /* ignore */ }
+}
+
+/** Bill numbers this browser knows per exporter (default SB always included, ascending). */
+const numsKey = (e: Address) => `hisab-monad-sbnums-${e.toLowerCase()}`;
+export function knownSbNums(exporter: Address): number[] {
+  let l: number[] = [];
+  try { l = JSON.parse(localStorage.getItem(numsKey(exporter)) ?? '[]'); } catch { /* ignore */ }
+  return [...new Set([DEFAULT_SB, ...l.filter((n) => Number.isSafeInteger(n))])].sort((a, b) => a - b);
+}
+export function rememberSbNum(exporter: Address, n: number) {
+  const l = knownSbNums(exporter);
+  if (l.includes(n)) return;
+  try { localStorage.setItem(numsKey(exporter), JSON.stringify([...l, n])); } catch { /* ignore */ }
 }
