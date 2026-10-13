@@ -24,7 +24,7 @@ interface Ctx {
   /** Privy email login state; `enabled` is false when VITE_PRIVY_APP_ID is unset (burners only). */
   privy: { enabled: boolean; ready: boolean; authenticated: boolean; email?: string };
   /** Bind the Privy embedded wallet to a role (opens the email login first when needed). One role at a time. */
-  bindEmail: (r: Role) => Promise<void>;
+  bindEmail: (r: Role, mode?: 'passkey-signup') => Promise<void>;
   /** Revert a role to its burner wallet (privy / browser wallets are only detached, not deleted). */
   unbind: (r: Role) => void;
   /** Privy logout; privy-backed roles fall back to their burners. */
@@ -167,11 +167,13 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     [slots],
   );
 
-  const bindEmail = useCallback(async (r: Role) => {
+  const bindEmail = useCallback(async (r: Role, mode?: 'passkey-signup') => {
     const api = apiRef.current;
     if (!privyEnabled || !api || !pvRef.current.ready) throw new Error('Email login is not available (Privy not configured or still loading)');
     setWant(r);
-    if (!pvRef.current.authenticated) api.login();
+    if (pvRef.current.authenticated) return;
+    if (mode !== 'passkey-signup') return api.login();
+    try { await api.signupPasskey(); } catch (e) { setWant((w) => (w === r ? null : w)); throw e; }
   }, []);
   const unbind = useCallback((r: Role) => {
     writeBind(r, null);

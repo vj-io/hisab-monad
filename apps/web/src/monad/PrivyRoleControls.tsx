@@ -19,7 +19,10 @@ export function PrivyRoleControls({ role }: { role: Role }) {
           <Button size="sm" variant="ghost" onClick={() => logoutEmail().catch(fail)}>Log out</Button>
         </>
       ) : (
-        <Button size="sm" variant="ghost" disabled={!privy.ready} onClick={() => bindEmail(role).catch(fail)}>Passkey / email login</Button>
+        <>
+          <Button size="sm" variant="ghost" disabled={!privy.ready} onClick={() => bindEmail(role, 'passkey-signup').catch(fail)}>Sign up with passkey</Button>
+          <Button size="sm" variant="ghost" disabled={!privy.ready} onClick={() => bindEmail(role).catch(fail)}>Passkey / email login</Button>
+        </>
       )}
     </>
   );
