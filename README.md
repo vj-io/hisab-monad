@@ -48,18 +48,20 @@ Interest is `principal * aprBps * days / (365 * 10,000)` in integer math, so the
 
 RPC `https://testnet-rpc.monad.xyz`. Explorer `https://testnet.monadexplorer.com`.
 
+Deployed at block 70657795 by `0xA27718496639C050f537b1751C405AA7341A6BF8` (also the fee wallet).
+
 | Contract | Address |
 |---|---|
-| roles (HisabRoles) | <!-- ADDRESSES --> |
-| registry (ShippingBillRegistry) | |
-| token (ReceivableToken) | |
-| engine (RealisationEngine) | |
-| pool (FinancingPool) | |
-| credit (ExporterCredit) | |
-| ausd (MockAUSD) | |
-| remittance (RemittanceRegistry) | |
-| ebrc (EBRCIssuer) | |
-| payoutLedger (PayoutLedger) | |
+| roles (HisabRoles) | [`0x798b454B2830Ccf6248eFEfef64983E80cAAcFb1`](https://testnet.monadexplorer.com/address/0x798b454B2830Ccf6248eFEfef64983E80cAAcFb1) |
+| registry (ShippingBillRegistry) | [`0x70DfBF7005c6b14aea99F87Eb51bdCAa249c55Da`](https://testnet.monadexplorer.com/address/0x70DfBF7005c6b14aea99F87Eb51bdCAa249c55Da) |
+| token (ReceivableToken) | [`0xb3093FE6932B502605C963E69F5B984Bb0a7B333`](https://testnet.monadexplorer.com/address/0xb3093FE6932B502605C963E69F5B984Bb0a7B333) |
+| engine (RealisationEngine) | [`0x81a4b174a1F6A1bA6c390Ef0A2e819967eBd73Dd`](https://testnet.monadexplorer.com/address/0x81a4b174a1F6A1bA6c390Ef0A2e819967eBd73Dd) |
+| pool (FinancingPool) | [`0xAe479624365Ff4A1157F434Bd6fc0378C06fA4C9`](https://testnet.monadexplorer.com/address/0xAe479624365Ff4A1157F434Bd6fc0378C06fA4C9) |
+| credit (ExporterCredit) | [`0xD34066528fc84D974a726fd0766e9Ed584dF4c5d`](https://testnet.monadexplorer.com/address/0xD34066528fc84D974a726fd0766e9Ed584dF4c5d) |
+| ausd (MockAUSD) | [`0x0C04497109189d785477D417c00E287B36529936`](https://testnet.monadexplorer.com/address/0x0C04497109189d785477D417c00E287B36529936) |
+| remittance (RemittanceRegistry) | [`0xD5611eb1FE7c64564C975e5d758106D7D6F3E374`](https://testnet.monadexplorer.com/address/0xD5611eb1FE7c64564C975e5d758106D7D6F3E374) |
+| ebrc (EBRCIssuer) | [`0xaEEbA4BCea70Ed4fd0ED476E60A5Fb2594CD8dFC`](https://testnet.monadexplorer.com/address/0xaEEbA4BCea70Ed4fd0ED476E60A5Fb2594CD8dFC) |
+| payoutLedger (PayoutLedger) | [`0x1540A415d8FFF01C772d9701c626efEa451dB69d`](https://testnet.monadexplorer.com/address/0x1540A415d8FFF01C772d9701c626efEa451dB69d) |
 
 ## Repo layout
 
