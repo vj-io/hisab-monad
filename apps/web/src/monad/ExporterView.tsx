@@ -5,6 +5,7 @@ import { Stamp } from '../ui/Stamp';
 import { Empty } from '../ui/Empty';
 import { RuleRow } from '../ui/RuleRow';
 import { Button } from '../ui/Button';
+import { Highlight, InkBox, InkCheck, InkCircle } from './doodle';
 import { activeSb, C, deployed, exactAusd, fmtAusd, fmtDate, publicClient, sbHashFor, setActiveSb } from './chain';
 import { engineAbi } from './abi';
 import { ActionButton, ErrorBanner, NotDeployed, TxLink, useAction } from './bits';
@@ -42,11 +43,13 @@ export function ExporterView() {
   const again = useAction();
   const next = useAction();
   const [loadMsg, setLoadMsg] = useState('');
+  const [tier0, setTier0] = useState<number | null>(null);
   const [now, setNow] = useState(() => Math.floor(Date.now() / 1000));
   useEffect(() => { const id = setInterval(() => setNow(Math.floor(Date.now() / 1000)), 1000); return () => clearInterval(id); }, []);
 
   const { data: inv } = useRead(() => readInvoice(sbHash), [sbHash]);
   const { data: credit } = useRead(() => readCredit(me), [me]);
+  useEffect(() => { if (credit && tier0 === null) setTier0(credit.tier); }, [credit, tier0]);
   const { data: payouts } = useRead(async () => {
     if (!inv?.pos.status) return null;
     const f = inv.pos.financedBlock ? await eventAt('Financed', inv.pos.financedBlock, sbHash) : undefined;
@@ -99,7 +102,7 @@ export function ExporterView() {
         <ActionButton label="Load demo invoice" busy={load.busy} onClick={() => load.run('Load demo invoice', loadDemo)} />
         <Button variant="ghost" onClick={freshDemo}>Start fresh demo</Button>
         <span className="text-xs text-muted">Funds the three wallets with gas and registers SB 6674321 for this exporter (75 days backdated, 2 on-time invoices of history).</span>
-        {loadMsg && <span className="font-mono text-xs text-accent-text">{loadMsg}</span>}
+        {loadMsg && <span className="font-mono text-xs">{loadMsg}</span>}
         {load.err && <ErrorBanner {...load.err} />}
       </div>
 
@@ -107,23 +110,30 @@ export function ExporterView() {
         {inv ? (
           <div>
             <RuleRow label="Shipping bill" value={sbNums.length > 1 ? (
-              <select className="h-8 rounded-[var(--radius-ui)] border border-line bg-sunken px-2 font-display text-sm font-semibold text-text" value={sbNum} onChange={(e) => { setActiveSb(me, Number(e.target.value)); bump((x) => x + 1); refresh(); }}>
+              <select className="h-9 px-2 text-sm font-semibold" value={sbNum} onChange={(e) => { setActiveSb(me, Number(e.target.value)); bump((x) => x + 1); refresh(); }}>
                 {sbNums.map((n) => <option key={n} value={n}>SB {n}</option>)}
               </select>
             ) : <span className="font-display font-semibold">SB {sbNum}</span>} />
             <RuleRow label="Amount" value={<span className="font-mono tabular">{fmtAusd(inv.amount)} AUSD</span>} />
             <RuleRow label="Due" value={<span className="font-mono tabular">{acked ? fmtDate(inv.ack.dueDate) : 'after buyer acknowledges'}</span>} />
-            <RuleRow label="Buyer acknowledged" value={acked ? 'Yes' : 'No'} />
+            <RuleRow label="Buyer acknowledged" value={acked ? <span className="inline-flex items-center gap-1.5">Yes <InkCheck size={20} /></span> : 'No'} />
             {inv.pos.shortfall > 0n && <RuleRow label="Shortfall" value={<span className="font-mono tabular text-danger">{fmtAusd(inv.pos.shortfall)} AUSD</span>} />}
             {accrued !== undefined && <RuleRow label="Interest accruing" value={<span className="font-mono tabular">{exactAusd(accrued)} AUSD</span>} />}
-            <div className="pt-3"><a className="text-sm text-accent-text underline" href={`#/pay/${sbHash}`}>Open buyer pay page</a> <span className="font-mono text-xs text-faint">{payLink(sbHash)}</span></div>
+            <div className="pt-3"><a className="text-sm" href={`#/pay/${sbHash}`}>Open buyer pay page</a> <span className="font-mono text-xs text-faint">{payLink(sbHash)}</span></div>
           </div>
         ) : <Empty message={deployed ? 'No invoice registered for this wallet. Load the demo invoice.' : 'Not deployed'} />}
       </Panel>
 
-      <Panel title="Credit tier" action={credit ? <Stamp tone="outline" label={TIERS[credit.tier]} /> : undefined}>
+      <Panel title="Credit tier" action={credit && tier0 !== null && credit.tier !== tier0 ? <Stamp state="REALISED" label={credit.tier > tier0 ? 'Tier up' : 'Tier down'} /> : undefined}>
         {credit ? (
           <div>
+            <div className="flex items-center gap-4 pb-2">
+              <InkCircle size={76} stroke={4} className="font-display text-[34px] leading-none">{credit.tier}</InkCircle>
+              <div className="min-w-0">
+                <div className="d-hand text-[18px] leading-none text-muted">{TIERS[credit.tier]} exporter</div>
+                <div className="font-display text-[26px] leading-tight tabular"><Highlight>{credit.advanceBps / 100}%</Highlight> <span className="font-mono text-xs font-medium text-muted">advance</span></div>
+              </div>
+            </div>
             <RuleRow label="Advance rate" value={<span className="font-mono tabular">{credit.advanceBps / 100}%</span>} />
             <RuleRow label="APR" value={<span className="font-mono tabular">{credit.aprBps / 100}%</span>} />
             <RuleRow label="Cap" value={<span className="font-mono tabular">{fmtAusd(credit.cap)} AUSD</span>} />
@@ -138,9 +148,21 @@ export function ExporterView() {
       <Panel title="Offer" className="md:col-span-2">
         {inv && offer !== undefined && credit ? (
           <div className="flex flex-col gap-3">
-            <div className="text-sm">
-              {status === 0 ? <>Advance <span className="font-mono tabular font-semibold">{fmtAusd(offer)} AUSD</span> ({credit.advanceBps / 100}% of {fmtAusd(inv.amount)}) at {credit.aprBps / 100}% APR.</> : <>Financed: advance <span className="font-mono tabular font-semibold">{fmtAusd(inv.pos.principal)} AUSD</span> at {inv.pos.aprBps / 100}% APR.</>}
-            </div>
+            <InkBox stroke={3.5} shadow className="px-4 py-3" delay={0.2}>
+              {status === 0 ? (
+                <>
+                  <div className="d-hand text-[18px] leading-none text-muted">Advance offer</div>
+                  <div className="mt-1 font-display text-[clamp(30px,6vw,46px)] leading-none tabular"><Highlight>{fmtAusd(offer)}</Highlight><span className="ml-2 font-mono text-sm font-medium text-muted">AUSD</span></div>
+                  <div className="mt-2 text-sm">{credit.advanceBps / 100}% of <span className="font-mono tabular">{fmtAusd(inv.amount)}</span> at {credit.aprBps / 100}% APR.</div>
+                </>
+              ) : (
+                <>
+                  <div className="d-hand text-[18px] leading-none text-muted">Financed advance</div>
+                  <div className="mt-1 font-display text-[clamp(30px,6vw,46px)] leading-none tabular"><Highlight>{fmtAusd(inv.pos.principal)}</Highlight><span className="ml-2 font-mono text-sm font-medium text-muted">AUSD</span></div>
+                  <div className="mt-2 text-sm">at {inv.pos.aprBps / 100}% APR.</div>
+                </>
+              )}
+            </InkBox>
             {status === 0 && !acked && <p className="text-sm text-muted">Waiting for the buyer to acknowledge. Open the pay page and acknowledge, then come back.</p>}
             <div className="flex flex-wrap items-center gap-3">
               <ActionButton label="Accept offer" busy={fin.busy} disabled={status !== 0 || !acked} onClick={() => fin.run('Accept offer', doFinance)} />

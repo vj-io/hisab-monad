@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { Hex } from 'viem';
 import { Tabs } from '../ui/Tabs';
 import { Button } from '../ui/Button';
+import { PrivyRoleControls } from './PrivyRoleControls';
 import { Hash } from '../ui/Hash';
 import { useToast } from '../components/Toasts';
 import { fmtAusd, fmtMon, sbHashFor } from './chain';
@@ -50,6 +51,7 @@ function WalletBar({ active }: { active: Role | null }) {
           <div className="mt-1.5 flex flex-wrap gap-1">
             <Button size="sm" variant="ghost" onClick={() => faucet(r)}>Gas</Button>
             <Button size="sm" variant="ghost" onClick={() => connectBrowser(r).catch((e) => toast.push('error', e.message))}>{slots[r].browser ? 'Browser wallet' : 'Connect browser wallet'}</Button>
+            <PrivyRoleControls role={r} />
           </div>
         </InkBox>
       ))}

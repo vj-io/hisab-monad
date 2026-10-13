@@ -152,3 +152,26 @@ export function InkBar({ value, label, className = '' }: { value: number; label?
     </div>
   );
 }
+
+/** One amount splitting through InkArrows into legs, e.g. pool / fee / exporter. Numbers in mono. */
+export function Waterfall({ total, totalLabel, legs, className = '' }: { total: ReactNode; totalLabel: string; legs: { label: string; value: ReactNode; hl?: boolean }[]; className?: string }) {
+  return (
+    <div className={`flex flex-col items-center ${className}`}>
+      <InkBox stroke={3} className="px-4 py-1.5 text-center">
+        <div className="d-hand text-[15px] leading-none text-muted">{totalLabel}</div>
+        <div className="font-mono text-sm font-bold tabular">{total}</div>
+      </InkBox>
+      <div className="grid w-full grid-cols-3 gap-2">
+        {legs.map((l, i) => (
+          <div key={l.label} className="flex min-w-0 flex-col items-center">
+            <InkArrow w={32} h={30} rotate={90} seed={21 + i} delay={0.3 + 0.15 * i} />
+            <InkBox stroke={2.5} delay={0.5 + 0.15 * i} className="w-full px-1 py-1.5 text-center">
+              <div className="d-hand text-[15px] leading-none text-muted">{l.hl ? <Highlight delay={0.9}>{l.label}</Highlight> : l.label}</div>
+              <div className="mt-0.5 break-all font-mono text-xs font-bold tabular">{l.value}</div>
+            </InkBox>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}

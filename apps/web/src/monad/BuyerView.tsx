@@ -4,6 +4,7 @@ import { Panel } from '../ui/Panel';
 import { Stamp } from '../ui/Stamp';
 import { Empty } from '../ui/Empty';
 import { Field } from '../ui/Field';
+import { Highlight, InkCheck, Waterfall } from './doodle';
 import { RuleRow } from '../ui/RuleRow';
 import { C, DEFAULT_SB, deployed, fmtAusd, fmtDate, parseAusd, publicClient, sbHashFor } from './chain';
 import { ausdAbi, engineAbi, tokenAbi } from './abi';
@@ -85,7 +86,7 @@ export function BuyerView({ sbHash }: { sbHash: Hex }) {
         {inv ? (
           <div>
             <RuleRow label="Shipping bill" value={<span className="font-display font-semibold">{sbLabel}</span>} />
-            <RuleRow label="Amount due" value={<span className="font-mono tabular text-lg font-semibold">{fmtAusd(inv.amount)} AUSD</span>} />
+            <RuleRow label="Amount due" value={<span className="font-display text-[clamp(26px,6vw,38px)] leading-none tabular"><Highlight>{fmtAusd(inv.amount)}</Highlight> <span className="font-mono text-xs font-medium text-muted">AUSD</span></span>} />
             <RuleRow label="Due date" value={<span className="font-mono tabular">{acked ? fmtDate(inv.ack.dueDate) : 'set at acknowledgement (+30 days)'}</span>} />
             <RuleRow label="Buyer wallet" value={<span className="font-mono tabular text-xs">{buyer}</span>} />
             <RuleRow label="Your AUSD" value={<span className="font-mono tabular">{fmtAusd(balances.buyer.ausd)}</span>} />
@@ -99,7 +100,7 @@ export function BuyerView({ sbHash }: { sbHash: Hex }) {
           <div className="flex flex-col gap-3">
             <p className="text-sm text-muted">Sign the invoice (EIP-712) with the buyer wallet. This lets the exporter finance it.</p>
             <div><ActionButton label="Acknowledge" busy={ack.busy} disabled={acked} onClick={() => ack.run('Acknowledge', once(acknowledge) as () => Promise<TxResult>)} /></div>
-            {acked && <p className="text-sm text-accent-text">Acknowledged at block {inv.ack.ackBlock.toString()}.</p>}
+            {acked && <p className="flex items-center gap-2 text-sm font-medium"><InkCheck size={24} />Acknowledged at block {inv.ack.ackBlock.toString()}.</p>}
             {ack.err && <ErrorBanner {...ack.err} />}
             {ack.tx && <TxLink hash={ack.tx.hash} ms={ack.tx.ms} />}
           </div>
@@ -110,27 +111,32 @@ export function BuyerView({ sbHash }: { sbHash: Hex }) {
         <Panel title="2. Pay">
           <div className="flex flex-col gap-3">
             <Field label="Amount (AUSD)" helper="Leave empty to pay the full amount. Less than the invoice amount is a short pay.">
-              <input className="h-9 w-full rounded-[var(--radius-ui)] border border-line bg-sunken px-3 font-mono tabular text-sm text-text" placeholder={fmtAusd(inv.amount).replace(/,/g, '')} value={amt} onChange={(e) => setAmt(e.target.value)} inputMode="decimal" />
+              <input className="h-10 w-full px-3 tabular text-sm" placeholder={fmtAusd(inv.amount).replace(/,/g, '')} value={amt} onChange={(e) => setAmt(e.target.value)} inputMode="decimal" />
             </Field>
             {amtErr && <p className="text-sm text-danger">{amtErr}</p>}
             {q && (
-              <div>
-                <RuleRow label="Pool: principal + interest" value={<span className="font-mono tabular">{fmtAusd(q.toPool)}</span>} />
-                <RuleRow label="of which interest" value={<span className="font-mono tabular">{fmtAusd(q.interest)}</span>} />
-                <RuleRow label="Platform fee" value={<span className="font-mono tabular">{fmtAusd(q.fee)}</span>} />
-                <RuleRow label="Exporter balance" value={<span className="font-mono tabular">{fmtAusd(q.toExporter)}</span>} />
-                <p className="pt-1 text-xs text-faint">Preview for the full amount, at the current time.</p>
+              <div className="flex flex-col gap-2">
+                <Waterfall totalLabel="buyer pays" total={`${fmtAusd(inv.amount)} AUSD`} legs={[
+                  { label: 'pool', value: fmtAusd(q.toPool), hl: true },
+                  { label: 'fee', value: fmtAusd(q.fee) },
+                  { label: 'exporter', value: fmtAusd(q.toExporter) },
+                ]} />
+                <RuleRow label="Pool leg is principal + interest, of which interest" value={<span className="font-mono tabular">{fmtAusd(q.interest)}</span>} />
+                <p className="text-xs text-faint">Preview for the full amount, at the current time.</p>
               </div>
             )}
             <div><ActionButton label="Pay" busy={pay.busy} disabled={status !== 1 || !!amtErr} onClick={() => pay.run('Pay', once(doPay))} /></div>
             {status === 0 && <p className="text-sm text-muted">Not financed yet, nothing to pay.</p>}
             {pay.err && <ErrorBanner {...pay.err} />}
             {receipt && (
-              <div>
-                <RuleRow label="Paid to pool" value={<span className="font-mono tabular">{fmtAusd(receipt.toPool)}</span>} />
-                <RuleRow label="Fee" value={<span className="font-mono tabular">{fmtAusd(receipt.fee)}</span>} />
-                <RuleRow label="To exporter" value={<span className="font-mono tabular">{fmtAusd(receipt.toExporter)}</span>} />
-                <div className="pt-2"><TxLink hash={receipt.hash} ms={receipt.ms} /></div>
+              <div className="flex flex-col items-center gap-3">
+                <Stamp state="REALISED" label="Paid" size="lg" />
+                <Waterfall totalLabel="paid" total={`${fmtAusd(receipt.toPool + receipt.fee + receipt.toExporter)} AUSD`} legs={[
+                  { label: 'to pool', value: fmtAusd(receipt.toPool), hl: true },
+                  { label: 'fee', value: fmtAusd(receipt.fee) },
+                  { label: 'to exporter', value: fmtAusd(receipt.toExporter) },
+                ]} className="w-full" />
+                <TxLink hash={receipt.hash} ms={receipt.ms} />
               </div>
             )}
           </div>
