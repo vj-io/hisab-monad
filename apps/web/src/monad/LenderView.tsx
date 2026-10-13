@@ -102,10 +102,12 @@ export function LenderView() {
           {!funded ? <Skeleton className="h-16" /> : funded.length ? (
             <div className="grid gap-3">
               {funded.map((i, n) => (
-                <InkBox key={i.sbHash} stroke={2.5} delay={0.1 * n} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-3 py-2.5">
-                  <span className="font-display text-sm font-semibold">{sbLabelFor(i.reg.exporter, i.sbHash)}</span>
-                  <span className="font-mono tabular text-sm">{fmtAusd(i.pos.principal)} AUSD <span className="text-muted">at</span> {(i.pos.aprBps / 100).toFixed(2)}%</span>
-                  <Stamp state={i.statusName} tone={i.statusName === 'DEFAULTED' ? 'danger' : undefined} />
+                <InkBox key={i.sbHash} stroke={2.5} delay={0.1 * n} className="flex items-center justify-between gap-4 px-3 py-2.5">
+                  <span className="grid min-w-0 gap-0.5">
+                    <span className="font-display text-sm font-semibold">{sbLabelFor(i.reg.exporter, i.sbHash)}</span>
+                    <span className="font-mono tabular text-xs">{fmtAusd(i.pos.principal)} AUSD <span className="text-muted">at</span> {(i.pos.aprBps / 100).toFixed(2)}%</span>
+                  </span>
+                  <span className="shrink-0"><Stamp state={i.statusName} tone={i.statusName === 'DEFAULTED' ? 'danger' : undefined} /></span>
                 </InkBox>
               ))}
             </div>
