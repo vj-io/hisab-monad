@@ -1,0 +1,5 @@
+demo
+contracts/artifacts
+contracts/cache
+contracts/typechain-types
+**/node_modules
